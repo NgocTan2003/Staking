@@ -55,7 +55,7 @@ async function main() {
         });
 
         // Update backend configuration
-        updateBackendConfig(receipt.blockNumber);
+        // updateBackendConfig(receipt.blockNumber);
 
         console.log("Deployment completed successfully.");
     } catch (error) {
@@ -64,102 +64,102 @@ async function main() {
     }
 }
 
-function saveFrontendFiles(addresses) {
-    const contractsDir = path.join(
-        __dirname,
-        "..",
-        "..",
-        "fe",
-        "src",
-        "contracts"
-    );
+// function saveFrontendFiles(addresses) {
+//     const contractsDir = path.join(
+//         __dirname,
+//         "..",
+//         "..",
+//         "fe",
+//         "src",
+//         "contracts"
+//     );
 
-    if (!fs.existsSync(contractsDir)) {
-        fs.mkdirSync(contractsDir, { recursive: true });
-    }
+//     if (!fs.existsSync(contractsDir)) {
+//         fs.mkdirSync(contractsDir, { recursive: true });
+//     }
 
-    fs.writeFileSync(
-        path.join(contractsDir, "contract-address.json"),
-        JSON.stringify(addresses, undefined, 2)
-    );
+//     fs.writeFileSync(
+//         path.join(contractsDir, "contract-address.json"),
+//         JSON.stringify(addresses, undefined, 2)
+//     );
 
-    const beContractDir = path.join(
-        __dirname,
-        "..",
-        "..",
-        "be",
-        "src",
-        "contracts"
-    );
+//     const beContractDir = path.join(
+//         __dirname,
+//         "..",
+//         "..",
+//         "be",
+//         "src",
+//         "contracts"
+//     );
 
-    if (!fs.existsSync(beContractDir)) {
-        fs.mkdirSync(beContractDir, { recursive: true });
-    }
+//     if (!fs.existsSync(beContractDir)) {
+//         fs.mkdirSync(beContractDir, { recursive: true });
+//     }
 
-    fs.writeFileSync(
-        path.join(beContractDir, "contract-address.json"),
-        JSON.stringify(addresses, undefined, 2)
-    );
+//     fs.writeFileSync(
+//         path.join(beContractDir, "contract-address.json"),
+//         JSON.stringify(addresses, undefined, 2)
+//     );
 
-    const myartifacts = ["TokenA", "NFTB", "Staking"];
+//     const myartifacts = ["TokenA", "NFTB", "Staking"];
 
-    myartifacts.forEach((artifact) => {
-        const ContractArtifact = artifacts.readArtifactSync(artifact);
-        fs.writeFileSync(
-            path.join(contractsDir, `${artifact}.json`),
-            JSON.stringify(ContractArtifact, null, 2)
-        );
-        fs.writeFileSync(
-            path.join(beContractDir, `${artifact}.json`),
-            JSON.stringify(ContractArtifact, null, 2)
-        );
-    });
-}
+//     myartifacts.forEach((artifact) => {
+//         const ContractArtifact = artifacts.readArtifactSync(artifact);
+//         fs.writeFileSync(
+//             path.join(contractsDir, `${artifact}.json`),
+//             JSON.stringify(ContractArtifact, null, 2)
+//         );
+//         fs.writeFileSync(
+//             path.join(beContractDir, `${artifact}.json`),
+//             JSON.stringify(ContractArtifact, null, 2)
+//         );
+//     });
+// }
 
-function updateBackendConfig(deploymentBlockNumber) {
-    const configPath = path.join(
-        __dirname,
-        "..",
-        "..",
-        "be",
-        "src",
-        "config.js"
-    );
+// function updateBackendConfig(deploymentBlockNumber) {
+//     const configPath = path.join(
+//         __dirname,
+//         "..",
+//         "..",
+//         "be",
+//         "src",
+//         "config.js"
+//     );
 
-    let configContent = fs.readFileSync(configPath, "utf8");
+//     let configContent = fs.readFileSync(configPath, "utf8");
 
-    // Parse the existing config
-    const configMatch = configContent.match(
-        /module\.exports\s*=\s*({[\s\S]*?});/
-    );
-    if (configMatch) {
-        let config = eval("(" + configMatch[1] + ")");
+//     // Parse the existing config
+//     const configMatch = configContent.match(
+//         /module\.exports\s*=\s*({[\s\S]*?});/
+//     );
+//     if (configMatch) {
+//         let config = eval("(" + configMatch[1] + ")");
 
-        // Update only the DEPLOYMENT_BLOCK
-        config.DEPLOYMENT_BLOCK = deploymentBlockNumber;
+//         // Update only the DEPLOYMENT_BLOCK
+//         config.DEPLOYMENT_BLOCK = deploymentBlockNumber;
 
-        // Reconstruct the config string
-        const updatedConfig = `module.exports = ${JSON.stringify(
-            config,
-            null,
-            4
-        )};`;
+//         // Reconstruct the config string
+//         const updatedConfig = `module.exports = ${JSON.stringify(
+//             config,
+//             null,
+//             4
+//         )};`;
 
-        // Replace the entire module.exports in the file
-        configContent = configContent.replace(
-            /module\.exports\s*=\s*{[\s\S]*?};/,
-            updatedConfig
-        );
+//         // Replace the entire module.exports in the file
+//         configContent = configContent.replace(
+//             /module\.exports\s*=\s*{[\s\S]*?};/,
+//             updatedConfig
+//         );
 
-        fs.writeFileSync(configPath, configContent);
+//         fs.writeFileSync(configPath, configContent);
 
-        console.log(
-            `Backend config updated with deployment block: ${deploymentBlockNumber}`
-        );
-    } else {
-        console.error("Could not find module.exports in config file");
-    }
-}
+//         console.log(
+//             `Backend config updated with deployment block: ${deploymentBlockNumber}`
+//         );
+//     } else {
+//         console.error("Could not find module.exports in config file");
+//     }
+// }
 
 main()
     .then(() => process.exit(0))

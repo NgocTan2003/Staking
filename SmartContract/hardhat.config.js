@@ -19,7 +19,8 @@ module.exports = {
   },
   networks:{
     bscTestnet: {
-      url: `https://bsc-testnet-rpc.publicnode.com`,
+      // url: `https://bsc-testnet-rpc.publicnode.com`,
+      url: `https://bsc-testnet.public.blastapi.io`,
       accounts: [`0x${process.env.PRIVATE_KEY}`],
       chainId: 97,
     },
