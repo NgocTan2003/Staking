@@ -1,41 +1,31 @@
 import Header from "../components/Header";
 import { Box, CircularProgress } from '@mui/material';
 import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useAccount } from 'wagmi'
-import { useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove } from "../abi/abi";
+import {
+    useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove,
+    useReadStakingGetCurrentApr, useReadStakingGetLockTimeRemaining
+} from "../abi/abi";
 import { parseUnits } from 'viem';
 import { waitForTransactionReceipt } from '@wagmi/core';
 import config from '../config';
 import { useStakingContext } from "../contexts/StakingContext";
 import { toast } from 'react-toastify';
-import { convertToNumber } from "../utils/convertUtils";
+import { convertToString, convertToNumber } from "../utils/convertUtils";
 
 const stakingContractAddress = import.meta.env.VITE_ADDRESS_STAKING as `0x${string}`;
-
-interface StakeInfo {
-    stakedAmount: number;
-    stakedNFTs: number;
-    userAPR: number;
-    totalReward: number;
-    lockTime: number;
-}
 
 const UserDashboard = () => {
     const amountFaucet = 100000;
     const { address, isConnected } = useAccount()
-    // const [amountDeposit, setAmountDeposit] = useState(0);
-
-    const [amountDeposit, setAmountDeposit] = useState<string>(''); // Change to string instead of number
-
-    const [stakeInfor, setStakeInfor] = useState<StakeInfo>({
-        stakedAmount: 0,
-        stakedNFTs: 0,
-        userAPR: 0,
-        totalReward: 0,
-        lockTime: 0
-    });
-    const { data: rawStakeInfor } = useReadStakingGetStakeDetail(
+    const [amountDeposit, setAmountDeposit] = useState<string>('');
+    const [stakedAmount, setStakedAmonut] = useState<string>('0');
+    const [stakedNFTs, setStakedNFTs] = useState<number>(0);
+    const [userAPR, setUserAPR] = useState<number>(0);
+    const [totalReward, setTotalReward] = useState<string>('0');
+    const [lockTime, setLockTime] = useState<number>(0);
+    const { data: rawStakeInfor, refetch: refetchStakeInfo } = useReadStakingGetStakeDetail(
         address ? {
             args: [address],
         } : {
@@ -45,10 +35,58 @@ const UserDashboard = () => {
     const [disabledDeposit, setDisabledDeposit] = useState(true);
     const { writeContractAsync: deposit, isPending: pendingDeposit } = useWriteStakingDeposit();
     const { writeContractAsync: approve, isPending: pendingApprove } = useWriteTokenAApprove();
-
     const { writeContractAsync: faucet, isPending: pendingFaucet } = useWriteTokenAFaucet();
+    const { data: rawCurrentApr } = useReadStakingGetCurrentApr({
+        args: [address as `0x${string}`],
+    });
+    const { data: rawStakingLockTimeRemaining } = useReadStakingGetLockTimeRemaining({
+        args: [address as `0x${string}`],
+    });
     const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA } = useStakingContext();
 
+    useEffect(() => {
+        if (rawStakeInfor && isConnected) {
+            console.log('rawStakeInfor', rawStakeInfor);
+            const stakedAmount = convertToString(rawStakeInfor[0] as bigint);
+            setStakedAmonut(stakedAmount);
+            const stakedNFTs = Number(rawStakeInfor[4]);
+            setStakedNFTs(stakedNFTs);
+            const userAPR = Number(rawCurrentApr) / 100;
+            setUserAPR(userAPR);
+        }
+    }, [rawStakeInfor]);
+
+    const fetchTotalReward = useCallback(async () => {
+        await refetchStakeInfo();
+        if (address && rawStakeInfor) {
+            try {
+                const totalReward = rawStakeInfor[1] + rawStakeInfor[2];
+                const totalRewardConvert = convertToString(totalReward as bigint);
+                setTotalReward(totalRewardConvert);
+            } catch (error) {
+                console.error("Error fetching total reward:", error);
+            }
+        }
+    }, [address, rawStakeInfor]);
+
+    useEffect(() => {
+        if (address) {
+            fetchTotalReward();
+            const interval = setInterval(() => {
+                fetchTotalReward();
+            }, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [address, fetchTotalReward]);
+
+    useEffect(() => {
+        if (lockTime <= 0) return;
+
+        const interval = setInterval(() => {
+            setLockTime(prev => prev - 1);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [lockTime]);
 
     const handleFaucet = async () => {
         try {
@@ -101,11 +139,13 @@ const UserDashboard = () => {
 
             setAmountDeposit('');
             toast.success('Deposit Success');
+            setLockTime(30);
 
             await waitForTransactionReceipt(config, {
                 hash: tx,
                 timeout: 10_000,
             });
+
 
             await updateBaseInfoUser();
         } catch (error) {
@@ -140,11 +180,11 @@ const UserDashboard = () => {
                                     <Typography variant="h5" color="black" sx={{ fontSize: '15px' }}>
                                         {isConnected ? (
                                             <>
-                                                <div className="">Staked Amount: {stakeInfor.stakedAmount} ETH</div>
-                                                <div className="">Staked NFTs: {stakeInfor.stakedNFTs}</div>
-                                                <div className="">User APR: {stakeInfor.userAPR} %</div>
-                                                <div className="">Total Reward: {stakeInfor.totalReward} ETH</div>
-                                                <div className="">LockTime: {stakeInfor.lockTime}</div>
+                                                <div className="">Staked Amount: {stakedAmount} ETH</div>
+                                                <div className="">Staked NFTs: {stakedNFTs}</div>
+                                                <div className="">User APR: {userAPR} %</div>
+                                                <div className="">Total Reward: {totalReward} ETH</div>
+                                                <div className="">LockTime: {lockTime}s</div>
                                             </>
                                         ) : (
                                             <>
@@ -154,13 +194,13 @@ const UserDashboard = () => {
                                     </Typography>
 
                                     <Button variant="contained"
-                                        disabled={!isConnected}
+                                        disabled={!isConnected || lockTime > 0}
                                         color="primary">
                                         WITHDRAW TOKENS
                                     </Button>
 
                                     <Button variant="contained"
-                                        disabled={!isConnected}
+                                        disabled={!isConnected || lockTime > 0}
                                         color="primary">
                                         CLAIM REWARDS
                                     </Button>
@@ -242,7 +282,7 @@ const UserDashboard = () => {
                     </Grid>
                 </Grid>
             </div>
-        </div>
+        </div >
     );
 }
 
