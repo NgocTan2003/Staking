@@ -10,3 +10,8 @@ export const convertToString = (value: bigint): string => {
 
     return String(formattedValue);
 }
+
+export const convertToNumber = (formatted: string): number => {
+    const normalized = formatted.replace(/\./g, '').replace(',', '.');
+    return parseFloat(normalized);
+};

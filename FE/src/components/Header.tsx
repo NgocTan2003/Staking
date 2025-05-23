@@ -3,44 +3,20 @@ import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { toast } from 'react-toastify';
-import { convertToString } from "../utils/convertUtils";
-import { useReadStakingApr, useReadTokenABalanceOf, useReadStakingMintedNfTs } from "../abi/abi";
+import { useStakingContext } from "../contexts/StakingContext";
 
 const Header = () => {
-    const { address, isConnected } = useAccount();
-    const [APR, setAPR] = useState<number>(0);
+    const { isConnected } = useAccount();
     const [prevConnected, setPrevConnected] = useState(false);
-    const [userBalance, setUserBalance] = useState<string>('0');
-    const [userNFTCount, setUserNFTCount] = useState<number>(0);
-    const { data: rawAPR } = useReadStakingApr();
-    const { data: rawBalanceOfUser } = useReadTokenABalanceOf({
-        args: [address as `0x${string}`],
-    });
-    const { data: rawNFTOfUser } = useReadStakingMintedNfTs({
-        args: [address as `0x${string}`],
-    });
+    const { baseAPR, userBalance, userNFTCount, updateBalancesTokenA } = useStakingContext();
 
     useEffect(() => {
         if (isConnected && !prevConnected) {
+            updateBalancesTokenA();
             toast.success('Connect Wallet Success');
         }
         setPrevConnected(isConnected);
     }, [isConnected, prevConnected]);
-
-    useEffect(() => {
-        if (rawAPR) {
-            const aprConvert = Number(rawAPR) / 100;
-            setAPR(aprConvert);
-        }
-        if (isConnected && rawNFTOfUser && rawBalanceOfUser) {
-            const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
-            const userNFTCountConvert = Number(rawNFTOfUser);
-            setUserBalance(userBalanceConvert);
-            setUserNFTCount(userNFTCountConvert);
-        }
-    }, [rawAPR]);
-
-
 
     return (
         <div className="flex justify-between items-center p-8 bg-gray-400 text-lg">
@@ -52,7 +28,7 @@ const Header = () => {
                 {isConnected ? (
                     <>
                         <div className="flex items-center gap-4 mr-4 text-sm">
-                            <div className="text-amber-100">Base APR: {APR}%</div>
+                            <div className="text-amber-100">Base APR: {baseAPR}%</div>
                             <div>Token A: {userBalance} ETH</div>
                             <div>NFTB: {userNFTCount}</div>
                         </div></>

@@ -1,13 +1,17 @@
 import Header from "../components/Header";
-import Box from '@mui/material/Box';
+import { Box, CircularProgress } from '@mui/material';
 import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useEffect, useState } from "react";
 import { useAccount } from 'wagmi'
-import { convertToString } from "../utils/convertUtils";
-import { useReadTokenAGetContractBalance, useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteTokenASetStakingContract } from "../abi/abi";
+import { useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove } from "../abi/abi";
 import { parseUnits } from 'viem';
 import { waitForTransactionReceipt } from '@wagmi/core';
 import config from '../config';
+import { useStakingContext } from "../contexts/StakingContext";
+import { toast } from 'react-toastify';
+import { convertToNumber } from "../utils/convertUtils";
+
+const stakingContractAddress = import.meta.env.VITE_ADDRESS_STAKING as `0x${string}`;
 
 interface StakeInfo {
     stakedAmount: number;
@@ -18,9 +22,12 @@ interface StakeInfo {
 }
 
 const UserDashboard = () => {
-    const amountFaucet = 3000000;
+    const amountFaucet = 100000;
     const { address, isConnected } = useAccount()
-    const [contractBalance, setContractBalance] = useState<string>('0')
+    // const [amountDeposit, setAmountDeposit] = useState(0);
+
+    const [amountDeposit, setAmountDeposit] = useState<string>(''); // Change to string instead of number
+
     const [stakeInfor, setStakeInfor] = useState<StakeInfo>({
         stakedAmount: 0,
         stakedNFTs: 0,
@@ -28,31 +35,19 @@ const UserDashboard = () => {
         totalReward: 0,
         lockTime: 0
     });
-    const { data: rawContractBalance, refetch: refetchContractBalance } = useReadTokenAGetContractBalance();
-    const { data: rawStakeInfor } = address ? useReadStakingGetStakeDetail({
-        args: [address],
-    }) : { data: undefined };
-    const { writeContractAsync: faucet, isSuccess, isPending } = useWriteTokenAFaucet();
-
-
-    useEffect(() => {
-        if (rawContractBalance) {
-            const value = convertToString(rawContractBalance as bigint);
-            setContractBalance(value);
+    const { data: rawStakeInfor } = useReadStakingGetStakeDetail(
+        address ? {
+            args: [address],
+        } : {
+            args: ['0x0000000000000000000000000000000000000000'],
         }
+    );
+    const [disabledDeposit, setDisabledDeposit] = useState(true);
+    const { writeContractAsync: deposit, isPending: pendingDeposit } = useWriteStakingDeposit();
+    const { writeContractAsync: approve, isPending: pendingApprove } = useWriteTokenAApprove();
 
-        if (rawStakeInfor) {
-            // const parsedStakeInfo: StakeInfo = {
-            //     stakedAmount: Number(rawStakeInfor[0]),
-            //     stakedNFTs: Number(rawStakeInfor[1]),
-            //     userAPR: Number(rawStakeInfor[2]),
-            //     totalReward: Number(rawStakeInfor[3]),
-            //     lockTime: Number(rawStakeInfor[4]),
-            // };
-            // console.log('parsedStakeInfo ', parsedStakeInfo);
-            // setStakeInfor(parsedStakeInfo);
-        }
-    }, [isConnected, rawContractBalance]);
+    const { writeContractAsync: faucet, isPending: pendingFaucet } = useWriteTokenAFaucet();
+    const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA } = useStakingContext();
 
 
     const handleFaucet = async () => {
@@ -67,11 +62,57 @@ const UserDashboard = () => {
                 timeout: 10_000,
             });
 
-            await refetchContractBalance();
+            await updateBaseInfoUser();
+            await updateBalancesTokenA();
         } catch (error) {
             console.error('Faucet error:', error);
         }
     };
+
+    const handleChangeDeposit = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+            setDisabledDeposit(false);
+            const valueNumber = value === '' ? 0 : parseFloat(value);
+            const balance = convertToNumber(userBalance);
+            if (valueNumber > balance) {
+                setDisabledDeposit(true);
+                toast.error('Deposit amount exceeds your balance');
+            } else {
+                setAmountDeposit(value);
+                setDisabledDeposit(valueNumber <= 0);
+            }
+        } else {
+            setDisabledDeposit(true);
+            toast.error('Invalid number format');
+        }
+    };
+
+    const handleDeposit = async () => {
+        try {
+            const amountBigInt = parseUnits(amountDeposit.toString(), 18);
+            await approve({
+                args: [stakingContractAddress, amountBigInt],
+            });
+
+            const tx = await deposit({
+                args: [amountBigInt],
+            });
+
+            setAmountDeposit('');
+            toast.success('Deposit Success');
+
+            await waitForTransactionReceipt(config, {
+                hash: tx,
+                timeout: 10_000,
+            });
+
+            await updateBaseInfoUser();
+        } catch (error) {
+            console.error('Deposit error:', error);
+            toast.error('Transaction failed');
+        }
+    }
 
 
     return (
@@ -81,7 +122,7 @@ const UserDashboard = () => {
             <div className="bg-blue-100 h-screen w-full p-6">
                 <div className="text-3xl">User Dashboard</div>
                 <div className="text-sm mt-5">
-                    Token A Remaining in Contract: {contractBalance} ETH
+                    Token A Remaining in Contract: {tokenAContract} ETH
                 </div>
                 <Grid container spacing={2} className="mt-2">
                     <Grid size={5}>
@@ -112,11 +153,15 @@ const UserDashboard = () => {
                                         )}
                                     </Typography>
 
-                                    <Button variant="contained" color="primary">
+                                    <Button variant="contained"
+                                        disabled={!isConnected}
+                                        color="primary">
                                         WITHDRAW TOKENS
                                     </Button>
 
-                                    <Button variant="contained" color="primary">
+                                    <Button variant="contained"
+                                        disabled={!isConnected}
+                                        color="primary">
                                         CLAIM REWARDS
                                     </Button>
                                 </Stack>
@@ -136,10 +181,16 @@ const UserDashboard = () => {
                                         Staking Actions
                                     </Typography>
 
-                                    <TextField label="Amount Deposit" variant="outlined" fullWidth />
+                                    <TextField label="Amount Deposit" variant="outlined" value={amountDeposit} type="text" onChange={handleChangeDeposit} fullWidth />
 
-                                    <Button variant="contained" color="primary">
-                                        Deposit
+                                    <Button variant="contained" disabled={disabledDeposit} onClick={handleDeposit} color="primary">
+                                        {pendingDeposit ? (
+                                            <>
+                                                <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
+                                            </>
+                                        ) : (
+                                            'Deposit'
+                                        )}
                                     </Button>
 
                                     <FormControl fullWidth>
@@ -151,9 +202,9 @@ const UserDashboard = () => {
                                         // value={}
                                         // onChange={}
                                         >
-                                            <MenuItem value={10}>Ten</MenuItem>
-                                            <MenuItem value={20}>Twenty</MenuItem>
-                                            <MenuItem value={30}>Thirty</MenuItem>
+                                            <MenuItem>Ten</MenuItem>
+                                            <MenuItem>Twenty</MenuItem>
+                                            <MenuItem>Thirty</MenuItem>
                                         </Select>
                                     </FormControl>
 
@@ -176,7 +227,13 @@ const UserDashboard = () => {
                                             fullWidth
                                             onClick={handleFaucet}
                                         >
-                                            {isPending ? 'Processing...' : 'Faucet 3M Token A'}
+                                            {pendingFaucet ? (
+                                                <>
+                                                    <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
+                                                </>
+                                            ) : (
+                                                'Faucet 3M Token A'
+                                            )}
                                         </Button>
                                     </div>
                                 </Stack>
@@ -186,8 +243,6 @@ const UserDashboard = () => {
                 </Grid>
             </div>
         </div>
-
-
     );
 }
 
