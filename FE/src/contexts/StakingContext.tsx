@@ -60,7 +60,7 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     const { data: rawBalanceOfUser, refetch: refetchBalanceOfUser } = useReadTokenABalanceOf({
         args: [address as `0x${string}`],
     });
-    const { data: rawNFTOfUser } = useReadStakingMintedNfTs({
+    const { data: rawNFTOfUser, refetch: refetchRawNFTOfUser } = useReadStakingMintedNfTs({
         args: [address as `0x${string}`],
     });
     const { data: rawAPR } = useReadStakingApr();
@@ -75,18 +75,24 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     }, [rawContractBalance]);
 
     useEffect(() => {
-        if (rawBalanceOfUser) {
+        if (rawBalanceOfUser || rawContractBalance || rawNFTOfUser) {
             const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
             setUserBalance(userBalanceConvert);
-        }
-    }, [rawBalanceOfUser])
 
-    useEffect(() => {
-        if (rawContractBalance) {
             const value = convertToString(rawContractBalance as bigint);
             setTokenAContract(value);
+
+            const userNFTCountConvert = Number(rawNFTOfUser);
+            setUserNFTCount(userNFTCountConvert);
         }
-    }, [rawContractBalance])
+    }, [rawBalanceOfUser, rawContractBalance, rawNFTOfUser])
+
+    // useEffect(() => {
+    //     if (rawContractBalance) {
+    //         const value = convertToString(rawContractBalance as bigint);
+    //         setTokenAContract(value);
+    //     }
+    // }, [rawContractBalance])
 
     const updateBaseInfoUser = useCallback(async () => {
         if (rawBalanceOfUser) {
@@ -95,6 +101,7 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
             refetchBalanceOfUser();
         }
         const userNFTCountConvert = Number(rawNFTOfUser);
+        refetchRawNFTOfUser();
         const aprConvert = Number(rawAPR) / 100;
         setBaseAPR(aprConvert);
         setUserNFTCount(userNFTCountConvert);
