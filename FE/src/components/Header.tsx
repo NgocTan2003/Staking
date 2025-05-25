@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { useAccount } from 'wagmi'
 import { toast } from 'react-toastify';
 import { useStakingContext } from "../contexts/StakingContext";
 
 const Header = () => {
-    const { isConnected } = useAccount();
+    const { isConnected, status } = useAccount();
     const [prevConnected, setPrevConnected] = useState(false);
     const { baseAPR, userBalance, userNFTCount, updateBalancesTokenA } = useStakingContext();
 
@@ -17,6 +17,12 @@ const Header = () => {
         }
         setPrevConnected(isConnected);
     }, [isConnected, prevConnected]);
+
+    useEffect(() => {
+        if (status === 'disconnected' && prevConnected) {
+            toast.success('Wallet disconnected');
+        }
+    }, [status, prevConnected]);
 
     return (
         <div className="flex justify-between items-center p-8 bg-gray-400 text-lg">

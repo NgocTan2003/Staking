@@ -64,57 +64,57 @@ async function main() {
     }
 }
 
-// function saveFrontendFiles(addresses) {
-//     const contractsDir = path.join(
-//         __dirname,
-//         "..",
-//         "..",
-//         "fe",
-//         "src",
-//         "contracts"
-//     );
+function saveFrontendFiles(addresses) {
+    const contractsDir = path.join(
+        __dirname,
+        "..",
+        "..",
+        "fe",
+        "src",
+        "contracts"
+    );
 
-//     if (!fs.existsSync(contractsDir)) {
-//         fs.mkdirSync(contractsDir, { recursive: true });
-//     }
+    if (!fs.existsSync(contractsDir)) {
+        fs.mkdirSync(contractsDir, { recursive: true });
+    }
 
-//     fs.writeFileSync(
-//         path.join(contractsDir, "contract-address.json"),
-//         JSON.stringify(addresses, undefined, 2)
-//     );
+    fs.writeFileSync(
+        path.join(contractsDir, "contract-address.json"),
+        JSON.stringify(addresses, undefined, 2)
+    );
 
-//     const beContractDir = path.join(
-//         __dirname,
-//         "..",
-//         "..",
-//         "be",
-//         "src",
-//         "contracts"
-//     );
+    const beContractDir = path.join(
+        __dirname,
+        "..",
+        "..",
+        "be",
+        "src",
+        "contracts"
+    );
 
-//     if (!fs.existsSync(beContractDir)) {
-//         fs.mkdirSync(beContractDir, { recursive: true });
-//     }
+    if (!fs.existsSync(beContractDir)) {
+        fs.mkdirSync(beContractDir, { recursive: true });
+    }
 
-//     fs.writeFileSync(
-//         path.join(beContractDir, "contract-address.json"),
-//         JSON.stringify(addresses, undefined, 2)
-//     );
+    fs.writeFileSync(
+        path.join(beContractDir, "contract-address.json"),
+        JSON.stringify(addresses, undefined, 2)
+    );
 
-//     const myartifacts = ["TokenA", "NFTB", "Staking"];
+    const myartifacts = ["TokenA", "NFTB", "Staking"];
 
-//     myartifacts.forEach((artifact) => {
-//         const ContractArtifact = artifacts.readArtifactSync(artifact);
-//         fs.writeFileSync(
-//             path.join(contractsDir, `${artifact}.json`),
-//             JSON.stringify(ContractArtifact, null, 2)
-//         );
-//         fs.writeFileSync(
-//             path.join(beContractDir, `${artifact}.json`),
-//             JSON.stringify(ContractArtifact, null, 2)
-//         );
-//     });
-// }
+    myartifacts.forEach((artifact) => {
+        const ContractArtifact = artifacts.readArtifactSync(artifact);
+        fs.writeFileSync(
+            path.join(contractsDir, `${artifact}.json`),
+            JSON.stringify(ContractArtifact, null, 2)
+        );
+        fs.writeFileSync(
+            path.join(beContractDir, `${artifact}.json`),
+            JSON.stringify(ContractArtifact, null, 2)
+        );
+    });
+}
 
 // function updateBackendConfig(deploymentBlockNumber) {
 //     const configPath = path.join(

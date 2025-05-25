@@ -4,8 +4,9 @@ import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Se
 import { useEffect, useState, useCallback, } from "react";
 import { useAccount } from 'wagmi'
 import {
-    useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove,
-    useReadStakingGetCurrentApr, useReadStakingGetNftListByOwner, useWriteStakingClaimReward, useWriteTokenASetStakingContract
+    useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove, useWriteStakingNftDeposit,
+    useReadStakingGetCurrentApr, useReadStakingGetNftListByOwner, useWriteStakingClaimReward, useWriteStakingWithDrawn,
+    useReadNftbIsApprovedForAll, useWriteNftbSetApprovalForAll
 } from "../abi/abi";
 import { parseUnits } from 'viem';
 import { waitForTransactionReceipt } from '@wagmi/core';
@@ -17,17 +18,19 @@ import { convertToString, convertToNumber } from "../utils/convertUtils";
 const stakingContractAddress = import.meta.env.VITE_ADDRESS_STAKING as `0x${string}`;
 
 const UserDashboard = () => {
-    const amountFaucet = 100000;
-    const { address, isConnected } = useAccount()
+    const amountFaucet = 3000000;
+    const { address, isConnected } = useAccount();
     const [amountDeposit, setAmountDeposit] = useState<string>('');
     const [stakedAmount, setStakedAmonut] = useState<string>('0');
     const [stakedNFTsCount, setstakedNFTsCount] = useState<number>(0);
-    const [NFTsOwned, setNFTsOwned] = useState<any[]>([]);
+    const [NFTsOwned, setNFTsOwned] = useState<number[]>([]);
     const [stakedNFTs, setStakedNFTs] = useState<any[]>([]);
     const [userAPR, setUserAPR] = useState<number>(0);
     const [totalReward, setTotalReward] = useState<string>('0');
     const [lockTime, setLockTime] = useState<number>(0);
     const [selectedNFTsForDeposit, setSelectedNFTsForDeposit] = useState<string[]>([]);
+    const [shouldCalculateReward, setShouldCalculateReward] = useState(true);
+
     const { data: rawStakeInfo, refetch: refetchStakeInfo } = useReadStakingGetStakeDetail(
         address ? {
             args: [address],
@@ -42,11 +45,19 @@ const UserDashboard = () => {
     const { data: rawNFTs, refetch: refetchRawNFTs } = useReadStakingGetNftListByOwner({
         args: [address as `0x${string}`],
     });
-    const { data: rawCurrentApr } = useReadStakingGetCurrentApr({
+    const { data: rawCurrentApr, refetch: refetchCurrentApr } = useReadStakingGetCurrentApr({
         args: [address as `0x${string}`],
     });
     const { writeContractAsync: claimReward, isSuccess: successClaimReward, isPending: pendingClaimReward } = useWriteStakingClaimReward();
-    const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA } = useStakingContext();
+    const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA, isAdmin } = useStakingContext();
+    const { writeContractAsync: withdraw, isSuccess: successWithdraw, isPending: pendingWithdraw } = useWriteStakingWithDrawn();
+    const { writeContractAsync: nftDeposit, isPending: pendingNFTDeposit } = useWriteStakingNftDeposit();
+    const { writeContractAsync: setApprovalForAll } = useWriteNftbSetApprovalForAll();
+    const { data: isApprovedForAll } = useReadNftbIsApprovedForAll({
+        args: [address as `0x${string}`, stakingContractAddress],
+    });
+
+    console.log("admin", isAdmin)
 
     useEffect(() => {
         if (rawStakeInfo && isConnected) {
@@ -57,7 +68,7 @@ const UserDashboard = () => {
             const userAPR = Number(rawCurrentApr) / 100;
             setUserAPR(userAPR);
         }
-    }, [rawStakeInfo, rawNFTs]);
+    }, [rawStakeInfo, rawStakeInfo, rawCurrentApr, isConnected]);
 
     useEffect(() => {
         if (successDeposit) {
@@ -87,18 +98,17 @@ const UserDashboard = () => {
     }, [address, rawStakeInfo]);
 
     useEffect(() => {
-        if (address) {
+        if (address && shouldCalculateReward) {
             fetchTotalReward();
             const interval = setInterval(() => {
                 fetchTotalReward();
-            }, 30000);
+            }, 5000);
             return () => clearInterval(interval);
         }
-    }, [address, fetchTotalReward]);
+    }, [address, fetchTotalReward, shouldCalculateReward]);
 
     useEffect(() => {
         if (lockTime <= 0) return;
-
         const interval = setInterval(() => {
             setLockTime(prev => prev - 1);
         }, 1000);
@@ -116,6 +126,7 @@ const UserDashboard = () => {
                 hash: tx,
                 timeout: 10_000,
             });
+            toast.success(`Faucet ${amountFaucet} tokenA success`)
 
             await updateBaseInfoUser();
             await updateBalancesTokenA();
@@ -126,8 +137,7 @@ const UserDashboard = () => {
 
     const handleChangeDeposit = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
-        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-            setDisabledDeposit(false);
+        if (value === '' || /^\d*\.?\d*$/.test(value) || value === '0') {
             const valueNumber = value === '' ? 0 : parseFloat(value);
             const balance = convertToNumber(userBalance);
             if (valueNumber > balance) {
@@ -137,6 +147,7 @@ const UserDashboard = () => {
                 setAmountDeposit(value);
                 setDisabledDeposit(valueNumber <= 0);
             }
+            setDisabledDeposit(false)
         } else {
             setDisabledDeposit(true);
             toast.error('Invalid number format');
@@ -162,7 +173,9 @@ const UserDashboard = () => {
             });
 
             await refetchStakeInfo();
+            await refetchRawNFTs();
             await updateBaseInfoUser();
+            setShouldCalculateReward(true);
         } catch (error) {
             console.error('Deposit error:', error);
             toast.error('Transaction failed');
@@ -189,6 +202,69 @@ const UserDashboard = () => {
         }
     }
 
+    const handleDepositNFTs = async () => {
+        console.log('Selected NFTs for deposit:', selectedNFTsForDeposit);
+        try {
+            if (!isApprovedForAll) {
+                const approveTx = await setApprovalForAll({
+                    args: [stakingContractAddress, true],
+                });
+                await waitForTransactionReceipt(config, {
+                    hash: approveTx,
+                    timeout: 10_000,
+                });
+            }
+
+            for (const nftId of selectedNFTsForDeposit) {
+                console.log('Depositing NFT ID:', nftId);
+                const tx = await nftDeposit({
+                    args: [BigInt(nftId)],
+                });
+
+                await waitForTransactionReceipt(config, {
+                    hash: tx,
+                    timeout: 10_000,
+                });
+
+                toast.success(`NFT #${nftId} deposited successfully`);
+                await refetchStakeInfo();
+                await refetchCurrentApr();
+                await refetchRawNFTs();
+            }
+            setSelectedNFTsForDeposit([]);
+        } catch (error) {
+            console.error("Error depositing NFTs:", error);
+            toast.error("Failed to deposit NFTs");
+        }
+    }
+
+    const handleWithdraw = async () => {
+        try {
+            setShouldCalculateReward(false);
+            const tx = await withdraw({});
+            await waitForTransactionReceipt(config, {
+                hash: tx,
+                timeout: 10_000,
+            });
+
+            await refetchStakeInfo();
+            await updateBaseInfoUser();
+            await refetchRawNFTs();
+            setAmountDeposit('0');
+            setStakedAmonut('0');
+            setstakedNFTsCount(0);
+            setStakedNFTs([]);
+            setTotalReward('0');
+            setLockTime(0);
+            setUserAPR(0);
+            setSelectedNFTsForDeposit([]);
+            toast.success('Withdraw success');
+        } catch (error) {
+            setShouldCalculateReward(true);
+            console.error('Withdraw error:', error);
+            toast.error('Transaction failed');
+        }
+    }
 
     return (
         <div>
@@ -229,16 +305,29 @@ const UserDashboard = () => {
                                     </Typography>
 
                                     <Button variant="contained"
-                                        disabled={!isConnected || lockTime > 0}
+                                        onClick={handleWithdraw}
+                                        disabled={!isConnected || lockTime > 0 || stakedAmount == '0'}
                                         color="primary">
-                                        WITHDRAW TOKENS
+                                        {pendingWithdraw ? (
+                                            <>
+                                                <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
+                                            </>
+                                        ) : (
+                                            'WITHDRAW TOKENS'
+                                        )}
                                     </Button>
 
                                     <Button variant="contained"
                                         onClick={handleClaimReward}
-                                        disabled={!isConnected || lockTime > 0}
+                                        disabled={!isConnected || lockTime > 0 || stakedAmount == '0'}
                                         color="primary">
-                                        CLAIM REWARDS
+                                        {pendingClaimReward ? (
+                                            <>
+                                                <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
+                                            </>
+                                        ) : (
+                                            'CLAIM REWARDS'
+                                        )}
                                     </Button>
                                 </Stack>
                             </Box>
@@ -269,61 +358,50 @@ const UserDashboard = () => {
                                         )}
                                     </Button>
 
-                                    <FormControl fullWidth>
-                                        <InputLabel id="demo-simple-select-label">Select NFTs to Deposit</InputLabel>
-                                        <Select
-                                            multiple
-                                            labelId="demo-simple-select-label"
-                                            id="demo-simple-select"
-                                            label="Select NFTs to Deposit"
-                                            value={selectedNFTsForDeposit}
-                                            renderValue={(selected: string[]) =>
-                                                selected.join(", ")
-                                            }
-                                        // onChange={}
-                                        >
-                                            {NFTsOwned
-                                                .filter(
-                                                    (nftId) =>
-                                                        !stakedNFTs.includes(nftId)
-                                                )
-                                                .map((nftId) => (
-                                                    <MenuItem
-                                                        key={nftId}
-                                                        value={nftId}
-                                                    >
-                                                        <Checkbox
-                                                            checked={
-                                                                selectedNFTsForDeposit.indexOf(
-                                                                    nftId
-                                                                ) > -1
-                                                            }
-                                                            value={nftId}
-                                                            onChange={(event) => {
-                                                                const value = event.target.value;
-                                                                setSelectedNFTsForDeposit((prev) =>
-                                                                    prev.includes(value)
-                                                                        ? prev.filter((id) => id !== value)
-                                                                        : [...prev, value]
-                                                                );
-                                                            }}
-                                                        />
-                                                        <Typography>
-                                                            NFT #{nftId}
-                                                        </Typography>
-                                                    </MenuItem>
-                                                ))}
-                                        </Select>
-                                    </FormControl>
+                                    {stakedAmount !== '0' && (
+                                        <FormControl fullWidth>
+                                            <InputLabel id="demo-simple-select-label">Select NFTs to Deposit</InputLabel>
+                                            <Select
+                                                multiple
+                                                labelId="demo-simple-select-label"
+                                                id="demo-simple-select"
+                                                label="Select NFTs to Deposit"
+                                                value={selectedNFTsForDeposit}
+                                                onChange={(event) => {
+                                                    const value = event.target.value;
+                                                    setSelectedNFTsForDeposit(typeof value === 'string' ? value.split(',') : value);
+                                                }}
+                                                renderValue={(selected) => selected.join(', ')}
+                                            >
+                                                {NFTsOwned
+                                                    .filter((nftId) => !stakedNFTs.includes(nftId))
+                                                    .map((nftId) => (
+                                                        <MenuItem key={nftId} value={nftId.toString()}>
+                                                            <Checkbox
+                                                                checked={selectedNFTsForDeposit.includes(nftId.toString())}
+                                                            />
+                                                            <Typography>NFT #{nftId}</Typography>
+                                                        </MenuItem>
+                                                    ))}
+                                            </Select>
+                                        </FormControl>
+                                    )}
 
                                     <div>
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            disabled={!isConnected}
+                                            disabled={!isConnected || selectedNFTsForDeposit.length === 0 || stakedAmount === '0'}
                                             fullWidth
+                                            onClick={handleDepositNFTs}
                                         >
-                                            Deposit Selected NFTs
+                                            {pendingNFTDeposit ? (
+                                                <>
+                                                    <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
+                                                </>
+                                            ) : (
+                                                'Deposit Selected NFTs'
+                                            )}
                                         </Button>
                                     </div>
 
@@ -353,6 +431,7 @@ const UserDashboard = () => {
         </div >
     );
 }
+
 
 
 export default UserDashboard;

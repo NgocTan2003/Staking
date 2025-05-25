@@ -6,6 +6,245 @@ import {
 } from 'wagmi/codegen'
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// NFTB
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const nftbAbi = [
+  { type: 'constructor', inputs: [], stateMutability: 'nonpayable' },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'sender', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'owner', internalType: 'address', type: 'address' },
+    ],
+    name: 'ERC721IncorrectOwner',
+  },
+  {
+    type: 'error',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'ERC721InsufficientApproval',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'approver', internalType: 'address', type: 'address' }],
+    name: 'ERC721InvalidApprover',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'operator', internalType: 'address', type: 'address' }],
+    name: 'ERC721InvalidOperator',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'ERC721InvalidOwner',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'receiver', internalType: 'address', type: 'address' }],
+    name: 'ERC721InvalidReceiver',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'sender', internalType: 'address', type: 'address' }],
+    name: 'ERC721InvalidSender',
+  },
+  {
+    type: 'error',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ERC721NonexistentToken',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'approved',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'Approval',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'owner',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        name: 'operator',
+        internalType: 'address',
+        type: 'address',
+        indexed: true,
+      },
+      { name: 'approved', internalType: 'bool', type: 'bool', indexed: false },
+    ],
+    name: 'ApprovalForAll',
+  },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address', indexed: true },
+      { name: 'to', internalType: 'address', type: 'address', indexed: true },
+      {
+        name: 'tokenId',
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+      },
+    ],
+    name: 'Transfer',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'owner', internalType: 'address', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'getApproved',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'owner', internalType: 'address', type: 'address' },
+      { name: 'operator', internalType: 'address', type: 'address' },
+    ],
+    name: 'isApprovedForAll',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'name',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'ownerOf',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'to', internalType: 'address', type: 'address' }],
+    name: 'safeMint',
+    outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+      { name: 'data', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'safeTransferFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'operator', internalType: 'address', type: 'address' },
+      { name: 'approved', internalType: 'bool', type: 'bool' },
+    ],
+    name: 'setApprovalForAll',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'interfaceId', internalType: 'bytes4', type: 'bytes4' }],
+    name: 'supportsInterface',
+    outputs: [{ name: '', internalType: 'bool', type: 'bool' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [],
+    name: 'symbol',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'tokenId', internalType: 'uint256', type: 'uint256' }],
+    name: 'tokenURI',
+    outputs: [{ name: '', internalType: 'string', type: 'string' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [
+      { name: 'from', internalType: 'address', type: 'address' },
+      { name: 'to', internalType: 'address', type: 'address' },
+      { name: 'tokenId', internalType: 'uint256', type: 'uint256' },
+    ],
+    name: 'transferFrom',
+    outputs: [],
+    stateMutability: 'nonpayable',
+  },
+] as const
+
+export const nftbAddress = '0x7cB0708BC3a2F951CF97970C6Ca45a324cd5fCca' as const
+
+export const nftbConfig = { address: nftbAddress, abi: nftbAbi } as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Staking
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -352,7 +591,7 @@ export const stakingAbi = [
 ] as const
 
 export const stakingAddress =
-  '0xf57F793e611aB8f95d70e6C346fd404Ba9998bb3' as const
+  '0x77AcEB91AE02dF816cA216f70ce7373C9Bd75F6B' as const
 
 export const stakingConfig = {
   address: stakingAddress,
@@ -627,13 +866,240 @@ export const tokenAAbi = [
 ] as const
 
 export const tokenAAddress =
-  '0xeDA7F3807025a90d84Bc2bd413eFd48A81B57400' as const
+  '0xEB1f7dBFE8850b113B06d66b12a852CD6aDdB410' as const
 
 export const tokenAConfig = { address: tokenAAddress, abi: tokenAAbi } as const
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // React
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__
+ */
+export const useReadNftb = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"balanceOf"`
+ */
+export const useReadNftbBalanceOf = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'balanceOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"getApproved"`
+ */
+export const useReadNftbGetApproved = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'getApproved',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"isApprovedForAll"`
+ */
+export const useReadNftbIsApprovedForAll = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'isApprovedForAll',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"name"`
+ */
+export const useReadNftbName = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'name',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"ownerOf"`
+ */
+export const useReadNftbOwnerOf = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'ownerOf',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"supportsInterface"`
+ */
+export const useReadNftbSupportsInterface = /*#__PURE__*/ createUseReadContract(
+  { abi: nftbAbi, address: nftbAddress, functionName: 'supportsInterface' },
+)
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"symbol"`
+ */
+export const useReadNftbSymbol = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'symbol',
+})
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"tokenURI"`
+ */
+export const useReadNftbTokenUri = /*#__PURE__*/ createUseReadContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'tokenURI',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__
+ */
+export const useWriteNftb = /*#__PURE__*/ createUseWriteContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"approve"`
+ */
+export const useWriteNftbApprove = /*#__PURE__*/ createUseWriteContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"safeMint"`
+ */
+export const useWriteNftbSafeMint = /*#__PURE__*/ createUseWriteContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'safeMint',
+})
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useWriteNftbSafeTransferFrom =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: nftbAbi,
+    address: nftbAddress,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useWriteNftbSetApprovalForAll =
+  /*#__PURE__*/ createUseWriteContract({
+    abi: nftbAbi,
+    address: nftbAddress,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWriteContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useWriteNftbTransferFrom = /*#__PURE__*/ createUseWriteContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'transferFrom',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__
+ */
+export const useSimulateNftb = /*#__PURE__*/ createUseSimulateContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"approve"`
+ */
+export const useSimulateNftbApprove = /*#__PURE__*/ createUseSimulateContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'approve',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"safeMint"`
+ */
+export const useSimulateNftbSafeMint = /*#__PURE__*/ createUseSimulateContract({
+  abi: nftbAbi,
+  address: nftbAddress,
+  functionName: 'safeMint',
+})
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"safeTransferFrom"`
+ */
+export const useSimulateNftbSafeTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: nftbAbi,
+    address: nftbAddress,
+    functionName: 'safeTransferFrom',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"setApprovalForAll"`
+ */
+export const useSimulateNftbSetApprovalForAll =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: nftbAbi,
+    address: nftbAddress,
+    functionName: 'setApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useSimulateContract}__ with `abi` set to __{@link nftbAbi}__ and `functionName` set to `"transferFrom"`
+ */
+export const useSimulateNftbTransferFrom =
+  /*#__PURE__*/ createUseSimulateContract({
+    abi: nftbAbi,
+    address: nftbAddress,
+    functionName: 'transferFrom',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link nftbAbi}__
+ */
+export const useWatchNftbEvent = /*#__PURE__*/ createUseWatchContractEvent({
+  abi: nftbAbi,
+  address: nftbAddress,
+})
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link nftbAbi}__ and `eventName` set to `"Approval"`
+ */
+export const useWatchNftbApprovalEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: nftbAbi,
+    address: nftbAddress,
+    eventName: 'Approval',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link nftbAbi}__ and `eventName` set to `"ApprovalForAll"`
+ */
+export const useWatchNftbApprovalForAllEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: nftbAbi,
+    address: nftbAddress,
+    eventName: 'ApprovalForAll',
+  })
+
+/**
+ * Wraps __{@link useWatchContractEvent}__ with `abi` set to __{@link nftbAbi}__ and `eventName` set to `"Transfer"`
+ */
+export const useWatchNftbTransferEvent =
+  /*#__PURE__*/ createUseWatchContractEvent({
+    abi: nftbAbi,
+    address: nftbAddress,
+    eventName: 'Transfer',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link stakingAbi}__

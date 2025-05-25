@@ -24,7 +24,6 @@ interface StakingContextType {
     userBalance: string;
     tokenAContract: string;
     userNFTCount: number;
-    stakingContract: any;
     nftBBalance: string;
     baseAPR: number;
     initializeContracts: () => Promise<void>;
@@ -50,7 +49,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     const { address, isConnected } = useAccount();
     const [isAdmin, setIsAdmin] = useState(false);
     const [tokenAContract, setTokenAContract] = useState<string>('0')
-    const [stakingContract, setStakingContract] = useState<any>(null);
     const [userBalance, setUserBalance] = useState<string>('0');
     const [userNFTCount, setUserNFTCount] = useState<number>(0);
     const [nftBBalance, setNFTBBalance] = useState('0');
@@ -65,6 +63,14 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     });
     const { data: rawAPR } = useReadStakingApr();
 
+    useEffect(() => {
+        if (address && isConnected) {
+            const isAdminAddress = address.toLowerCase() === import.meta.env.VITE_ADMIN_ADDRESS.toLowerCase();
+            setIsAdmin(isAdminAddress);
+        } else {
+            setIsAdmin(false);
+        }
+    }, [address, isConnected]);
 
     const updateBalancesTokenA = useCallback(async () => {
         if (rawContractBalance !== undefined && rawContractBalance !== null) {
@@ -76,23 +82,17 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
 
     useEffect(() => {
         if (rawBalanceOfUser || rawContractBalance || rawNFTOfUser) {
-            const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
-            setUserBalance(userBalanceConvert);
+            if (isConnected) {
+                const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
+                setUserBalance(userBalanceConvert);
+                const userNFTCountConvert = Number(rawNFTOfUser);
+                setUserNFTCount(userNFTCountConvert);
+            }
 
             const value = convertToString(rawContractBalance as bigint);
             setTokenAContract(value);
-
-            const userNFTCountConvert = Number(rawNFTOfUser);
-            setUserNFTCount(userNFTCountConvert);
         }
     }, [rawBalanceOfUser, rawContractBalance, rawNFTOfUser])
-
-    // useEffect(() => {
-    //     if (rawContractBalance) {
-    //         const value = convertToString(rawContractBalance as bigint);
-    //         setTokenAContract(value);
-    //     }
-    // }, [rawContractBalance])
 
     const updateBaseInfoUser = useCallback(async () => {
         if (rawBalanceOfUser) {
@@ -101,10 +101,10 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
             refetchBalanceOfUser();
         }
         const userNFTCountConvert = Number(rawNFTOfUser);
-        refetchRawNFTOfUser();
         const aprConvert = Number(rawAPR) / 100;
         setBaseAPR(aprConvert);
         setUserNFTCount(userNFTCountConvert);
+        refetchRawNFTOfUser();
     }, [isConnected, rawBalanceOfUser, rawNFTOfUser, rawAPR]);
 
     const initializeContracts = useCallback(async () => {
@@ -130,7 +130,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
         tokenAContract,
         userBalance,
         userNFTCount,
-        stakingContract,
         nftBBalance,
         baseAPR,
         initializeContracts,
@@ -142,7 +141,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
         tokenAContract,
         userBalance,
         userNFTCount,
-        stakingContract,
         nftBBalance,
         baseAPR,
         initializeContracts,

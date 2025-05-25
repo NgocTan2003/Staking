@@ -250,7 +250,7 @@ contract Staking is Ownable, ReentrancyGuard {
     }
 
     function getCurrentAPR(address user) public view returns (uint256) {
-        Stake storage stake = stakes[msg.sender];
+        Stake storage stake = stakes[user];
         if (stakes[user].nftCount == 0) {
             return APR;
         } else {
