@@ -1,4 +1,3 @@
-import Header from "../components/Header";
 import { Box, CircularProgress, Checkbox } from '@mui/material';
 import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useEffect, useState, useCallback, } from "react";
@@ -56,8 +55,6 @@ const UserDashboard = () => {
     const { data: isApprovedForAll } = useReadNftbIsApprovedForAll({
         args: [address as `0x${string}`, stakingContractAddress],
     });
-
-    console.log("admin", isAdmin)
 
     useEffect(() => {
         if (rawStakeInfo && isConnected) {
@@ -124,7 +121,7 @@ const UserDashboard = () => {
 
             await waitForTransactionReceipt(config, {
                 hash: tx,
-                timeout: 10_000,
+                timeout: 30_000,
             });
             toast.success(`Faucet ${amountFaucet} tokenA success`)
 
@@ -169,7 +166,7 @@ const UserDashboard = () => {
 
             await waitForTransactionReceipt(config, {
                 hash: tx,
-                timeout: 10_000,
+                timeout: 30_000,
             });
 
             await refetchStakeInfo();
@@ -189,7 +186,7 @@ const UserDashboard = () => {
 
                 await waitForTransactionReceipt(config, {
                     hash: tx,
-                    timeout: 10_000,
+                    timeout: 30_000,
                 });
 
                 await refetchStakeInfo();
@@ -244,7 +241,7 @@ const UserDashboard = () => {
             const tx = await withdraw({});
             await waitForTransactionReceipt(config, {
                 hash: tx,
-                timeout: 10_000,
+                timeout: 30_000,
             });
 
             await refetchStakeInfo();
@@ -268,8 +265,6 @@ const UserDashboard = () => {
 
     return (
         <div>
-            <Header />
-
             <div className="bg-blue-100 h-screen w-full p-6">
                 <div className="text-3xl">User Dashboard</div>
                 <div className="text-sm mt-5">

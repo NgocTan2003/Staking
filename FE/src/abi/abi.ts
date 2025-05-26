@@ -240,7 +240,7 @@ export const nftbAbi = [
   },
 ] as const
 
-export const nftbAddress = '0x7cB0708BC3a2F951CF97970C6Ca45a324cd5fCca' as const
+export const nftbAddress = '0xD311D4768d400c5e05Ebfa64d6412F7c6929742F' as const
 
 export const nftbConfig = { address: nftbAddress, abi: nftbAbi } as const
 
@@ -591,7 +591,7 @@ export const stakingAbi = [
 ] as const
 
 export const stakingAddress =
-  '0x77AcEB91AE02dF816cA216f70ce7373C9Bd75F6B' as const
+  '0x2D208723De22B4b034a645D270C84b92250E4519' as const
 
 export const stakingConfig = {
   address: stakingAddress,
@@ -866,7 +866,7 @@ export const tokenAAbi = [
 ] as const
 
 export const tokenAAddress =
-  '0xEB1f7dBFE8850b113B06d66b12a852CD6aDdB410' as const
+  '0xa99270005695665a0E3b1F2f78b5C78601bA9C09' as const
 
 export const tokenAConfig = { address: tokenAAddress, abi: tokenAAbi } as const
 
