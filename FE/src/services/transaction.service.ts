@@ -1,7 +1,7 @@
 import axiosInstance from '../utils/hook/axiosInstance';
 
-export const getTransactionPaginated = async (page = 1, limit = 5, sort = 'createdAt', order = 'desc') => {
-    const response = await axiosInstance.get("/note/getlist", {
+const getTransactionPaginated = async (page = 1, limit = 10, sort = 'Timestamp', order = 'desc') => {
+    const response = await axiosInstance.get("/api/transactions/getAll", {
         params: {
             _page: page,
             _limit: limit,
@@ -12,3 +12,6 @@ export const getTransactionPaginated = async (page = 1, limit = 5, sort = 'creat
     });
     return response;
 };
+
+
+export { getTransactionPaginated };

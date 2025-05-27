@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Select, MenuItem, type SelectChangeEvent } from "@mui/material";
 import { toast } from 'react-toastify';
 import Table from '@mui/material/Table';
@@ -10,36 +10,19 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { useGetPaginatedTransaction } from "../utils/hook/useTransaction";
 import { useStakingContext } from "../contexts/StakingContext";
-
-function createData(
-    name: string,
-    calories: number,
-    fat: number,
-    carbs: number,
-    protein: number,
-) {
-    return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Eclair', 262, 16.0, 24, 6.0),
-    createData('Cupcake', 305, 3.7, 67, 4.3),
-    createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-
+import type { TransactionType } from "../types/transactions.type";
+import { convertToString } from '../utils/convertUtils';
 
 const TransactionHistory = () => {
     const [totalTransaction, setTotalTransaction] = useState<number>(0);
+    const [arrTransaction, setArrTransaction] = useState<TransactionType[]>([]);
     const [newAPR, setNewAPR] = useState<number>(0);
     const [keySearch, setKeySearch] = useState<string>('');
-    const [sortBy, setSortBy] = useState<string>('');
-    const [sortOrder, setSortOrder] = useState<string>('');
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(4);
-    // const { allNotes, totalPages, currentPage, isLoading, refetch } = useGetPaginatedTransaction(page, limit);
-
+    const [sortBy, setSortBy] = useState<string>('Timestamp');
+    const [sortOrder, setSortOrder] = useState<string>('desc');
+    const [page, setPage] = useState<number>(1);
+    const [limit, setLimit] = useState<number>(5);
+    const { allTransactions, totalDocs, totalPages, currentPage, isLoading, refetch } = useGetPaginatedTransaction(page, limit, sortBy, sortOrder);
 
     const { isAdmin } = useStakingContext();
 
@@ -63,14 +46,13 @@ const TransactionHistory = () => {
     }
 
 
-
     return (
         <div className="bg-blue-100 h-screen w-full p-6">
             <div className="text-xl">
                 All Transactions
             </div>
             <div className="text-sm mt-4">
-                Total Transactions: {totalTransaction}
+                Total Transactions: {totalDocs}
             </div>
             {isAdmin ? <>
                 <div className="mt-2 flex gap-2">
@@ -78,16 +60,16 @@ const TransactionHistory = () => {
                     <Button variant="contained" disabled={newAPR < 1}>Update APR</Button>
                 </div>
             </> : <></>}
-            <div className="flex gap-3 mt-3 h">
+            <div className="flex gap-3 mt-3 flex items-center">
                 <div>
                     <input className="p-2 border-1 rounded mr-2" placeholder="Search (Address/Block)" onChange={(e) => setKeySearch(e.target.value)} />
                     <Button variant="contained" disabled={keySearch == ''}>Search</Button>
                 </div>
                 <div >
                     <Select className="w-[auto] mr-2" value={sortBy} onChange={(e) => handleSortChange(e)}>
-                        <MenuItem value="timestamp">Timestamp</MenuItem>
-                        <MenuItem value="eventType">Event Type</MenuItem>
-                        <MenuItem value="amount">Amount</MenuItem>
+                        <MenuItem value="Timestamp">Timestamp</MenuItem>
+                        <MenuItem value="EventType">Event Type</MenuItem>
+                        <MenuItem value="Amount">Amount</MenuItem>
                     </Select>
                     <Button variant="outlined" onClick={handleSortOrderChange}>
                         {sortOrder === "asc" ? "Ascending" : "Descending"}
@@ -112,37 +94,51 @@ const TransactionHistory = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {rows.map((row) => (
+                            {allTransactions.map((item: TransactionType) => (
                                 <TableRow
-                                    key={row.name}
+
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
                                     <TableCell component="th" scope="row">
-                                        {row.name}
+                                        {item.TransactionHash}
                                     </TableCell>
-                                    <TableCell align="right">{row.calories}</TableCell>
-                                    <TableCell align="right">{row.fat}</TableCell>
-                                    <TableCell align="right">{row.carbs}</TableCell>
-                                    <TableCell align="right">{row.protein}</TableCell>
+                                    <TableCell align="right">{item.EventType}</TableCell>
+                                    <TableCell align="right">{item.BlockNumber}</TableCell>
+                                    <TableCell align="right">{item.From}</TableCell>
+                                    <TableCell align="right">{item.To}</TableCell>
+                                    <TableCell align="right">{convertToString(BigInt(item.Amount))}</TableCell>
+                                    <TableCell align="right">{item.TokenID}</TableCell>
+                                    <TableCell align="right">{item.APR}</TableCell>
+                                    <TableCell align="right">{item.GasUsed}</TableCell>
+                                    <TableCell align="right">{item.Timestamp}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                    <div className="w-full flex justify-end p-4 pr-10">
-                        <span>
-                            111111
-                        </span>
-                        {/* <button className="join-item btn" onClick={() => setPage(page - 1)} disabled={page === 1}>«</button>
-                                {[...Array()].map((_, i) => (
-                                    <button
-                                        key={i}
-                                        className={`join-item btn ${page === i + 1 ? 'btn-active' : ''}`}
-                                        onClick={() => setPage(i + 1)}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                                <button className="join-item btn" onClick={() => setPage(page + 1)} disabled={page === 1}>»</button> */}
+                    <div className="w-full flex justify-center py-6">
+                        <div className="inline-flex items-center space-x-2 rounded-xl shadow-md bg-white px-4 py-2">
+                            <button
+                                className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => setPage(page - 1)}
+                                disabled={page === 1}
+                            >
+                                Previous
+                            </button>
+
+                            <button
+                                className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow"
+                            >
+                                {page}
+                            </button>
+
+                            <button
+                                className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => setPage(page + 1)}
+                                disabled={page === totalPages}
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </TableContainer>
             </div>

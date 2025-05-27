@@ -2,18 +2,23 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { getTransactionPaginated } from '../../services/transaction.service'
 
 
-export const useGetPaginatedTransaction = (page: number, limit = 5) => {
-    // const { data, isLoading, refetch } = useQuery({
-    //     queryKey: ['paginatedNotes', page, limit],
-    //     queryFn: () => getTransactionPaginated(page, limit),
-    //     keepPreviousData: true,
-    // });
+const useGetPaginatedTransaction = (page: number, limit: number, sort: string, order: string) => {
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['paginatedTransactions', page, limit, sort, order],
+        queryFn: () => getTransactionPaginated(page, limit, sort, order),
+        staleTime: 5000,
+    });
 
-    // return {
-    //     allNotes: data?.data.notes.docs || [],
-    //     totalPages: data?.data.notes.totalPages || 1,
-    //     currentPage: data?.data.notes.page || page,
-    //     isLoading,
-    //     refetch,
-    // };
+    return {
+        totalDocs: data?.data.transactions.totalDocs || 0,
+        allTransactions: data?.data.
+        transactions.docs || [],
+        totalPages: data?.data.transactions.totalPages || 1,
+        currentPage: data?.data.transactions.page || page,
+        isLoading,
+        refetch,
+    };
 };
+
+
+export { useGetPaginatedTransaction };
