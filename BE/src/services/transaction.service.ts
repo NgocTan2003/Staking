@@ -80,9 +80,6 @@ const getAllTransactions = async (req: Request): Promise<TransactionPaginateResp
 const getUserTransactions = async (req: Request): Promise<TransactionPaginateResponse> => {
     try {
         const { address } = req.params;
-
-        console.log("Address:", req.params.address);   
-
         const {
             _page = 1,
             _limit = 10,
@@ -109,5 +106,39 @@ const getUserTransactions = async (req: Request): Promise<TransactionPaginateRes
     }
 }
 
+const searchTransactions = async (req: Request): Promise<TransactionPaginateResponse> => {
+    try {
+        const { address } = req.params;
+        const {
+            _page = 1,
+            _limit = 10,
+            _sort = "Timestamp",
+            _order = "desc",
+        } = req.query as any;
 
-export { crawlDataToDB, getAllTransactions, getUserTransactions };
+        const options = {
+            page: _page,
+            limit: _limit,
+            sort: { [_sort]: _order === "desc" ? -1 : 1 },
+        };
+
+        const transactions = await TransactionModel.paginate({
+            $or: [
+                { From: address.toLowerCase() },
+            ]
+        }, options);
+
+        return {
+            message: "Search successful",
+            transactions: transactions as PaginateResult<TransactionDocument>
+        };
+    } catch (error: any) {
+        return {
+            errorCode: INTERNAL_SERVER_ERROR,
+            message: error.message || "Unknown error",
+        };
+    }
+}
+
+
+export { crawlDataToDB, getAllTransactions, getUserTransactions, searchTransactions };
