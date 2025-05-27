@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { getAllHandler, getUserTransactions } from "../controllers/trans.controller";
+import { getAllHandler, getUserTransactionsHandler } from "../controllers/trans.controller";
 
 
 
 const transRoutes = Router();
 
 transRoutes.get("/getAll", getAllHandler)
-transRoutes.get("/getUserTransactions", getUserTransactions)
+transRoutes.get("/getUser/:address", getUserTransactionsHandler)
 
 
 export default transRoutes;
