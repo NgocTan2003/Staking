@@ -1,34 +1,33 @@
 import { useState, useEffect } from "react";
 import { Button, Select, MenuItem, type SelectChangeEvent } from "@mui/material";
 import { toast } from 'react-toastify';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import { useGetPaginatedTransaction } from "../utils/hook/useTransaction";
 import { useStakingContext } from "../contexts/StakingContext";
 import type { TransactionType } from "../types/transactions.type";
-import { convertToString } from '../utils/convertUtils';
+import { convertToString, truncateMiddle } from '../utils/convertUtils';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { useAccount } from "wagmi";
+import { useWriteStakingUpdateApr } from "../abi/abi"
+import { waitForTransactionReceipt } from '@wagmi/core';
+import config from '../config';
+
 
 const TransactionHistory = () => {
     const [totalTransaction, setTotalTransaction] = useState<number>(0);
-    const [arrTransaction, setArrTransaction] = useState<TransactionType[]>([]);
-    const [newAPR, setNewAPR] = useState<number>(0);
+    const [arrTransaction, setArrTransaction] = useState<TransactionType[]>([]); 4
+    const { isConnected } = useAccount();
+    const [newAPR, setNewAPR] = useState<number>();
     const [keySearch, setKeySearch] = useState<string>('');
     const [sortBy, setSortBy] = useState<string>('Timestamp');
     const [sortOrder, setSortOrder] = useState<string>('desc');
     const [page, setPage] = useState<number>(1);
     const [limit, setLimit] = useState<number>(5);
     const { allTransactions, totalDocs, totalPages, currentPage, isLoading, refetch } = useGetPaginatedTransaction(page, limit, sortBy, sortOrder);
-
-    const { isAdmin } = useStakingContext();
+    const { isAdmin, updateBaseInfoUser } = useStakingContext();
+    const { writeContractAsync: updateAPR } = useWriteStakingUpdateApr();
 
     const handleChangeAPR = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
-        console.log("value ", value, typeof value)
         if (value === '' || /^\d*\.?\d*$/.test(value) || value === '0') {
             const valueNumber = value === '' ? 0 : parseFloat(value);
             setNewAPR(valueNumber);
@@ -37,14 +36,31 @@ const TransactionHistory = () => {
         }
     }
 
+    const handleUpdateAPR = async () => {
+        if (newAPR !== undefined) {
+            const tx = await updateAPR({ args: [BigInt(newAPR * 100)] });
+            await waitForTransactionReceipt(config, {
+                hash: tx,
+                timeout: 30_000,
+            });
+            setNewAPR(0);
+            await updateBaseInfoUser();
+            toast.success(`APR updated to ${newAPR}% successfully!`);
+        }
+    }
+
     const handleSortChange = (e: SelectChangeEvent) => {
         setSortBy(e.target.value)
     };
+
 
     const handleSortOrderChange = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     }
 
+    if (!isConnected) {
+        return <div className="text-red-500 text-center text-xl mt-4">Please connect your wallet to view transaction history.</div>
+    }
 
     return (
         <div className="bg-blue-100 h-screen w-full p-6">
@@ -56,8 +72,8 @@ const TransactionHistory = () => {
             </div>
             {isAdmin ? <>
                 <div className="mt-2 flex gap-2">
-                    <input className="p-2 border-1 rounded" placeholder="New APR (%)" onChange={handleChangeAPR} />
-                    <Button variant="contained" disabled={newAPR < 1}>Update APR</Button>
+                    <input className="p-2 border-1 rounded" value={newAPR} placeholder="New APR (%)" onChange={handleChangeAPR} />
+                    <Button variant="contained" disabled={newAPR == undefined} onClick={handleUpdateAPR}>Update APR</Button>
                 </div>
             </> : <></>}
             <div className="flex gap-3 mt-3 flex items-center">
@@ -100,17 +116,17 @@ const TransactionHistory = () => {
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
                                     <TableCell component="th" scope="row">
-                                        {item.TransactionHash}
+                                        {truncateMiddle(item.TransactionHash)}
                                     </TableCell>
-                                    <TableCell align="right">{item.EventType}</TableCell>
-                                    <TableCell align="right">{item.BlockNumber}</TableCell>
-                                    <TableCell align="right">{item.From}</TableCell>
-                                    <TableCell align="right">{item.To}</TableCell>
-                                    <TableCell align="right">{convertToString(BigInt(item.Amount))}</TableCell>
-                                    <TableCell align="right">{item.TokenID}</TableCell>
-                                    <TableCell align="right">{item.APR}</TableCell>
-                                    <TableCell align="right">{item.GasUsed}</TableCell>
-                                    <TableCell align="right">{item.Timestamp}</TableCell>
+                                    <TableCell>{item.EventType}</TableCell>
+                                    <TableCell>{item.BlockNumber}</TableCell>
+                                    <TableCell>{truncateMiddle(item.From)}</TableCell>
+                                    <TableCell>{truncateMiddle(item.To)}</TableCell>
+                                    <TableCell>{convertToString(BigInt(item.Amount))}</TableCell>
+                                    <TableCell>{item.TokenID}</TableCell>
+                                    <TableCell>{Number(item.APR) / 100}</TableCell>
+                                    <TableCell>{item.GasUsed}</TableCell>
+                                    <TableCell>{item.Timestamp}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

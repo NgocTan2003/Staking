@@ -61,7 +61,7 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     const { data: rawNFTOfUser, refetch: refetchRawNFTOfUser } = useReadStakingMintedNfTs({
         args: [address as `0x${string}`],
     });
-    const { data: rawAPR } = useReadStakingApr();
+    const { data: rawAPR, refetch: refetchRawAPR } = useReadStakingApr();
 
     useEffect(() => {
         if (address && isConnected) {
@@ -105,6 +105,7 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
         setBaseAPR(aprConvert);
         setUserNFTCount(userNFTCountConvert);
         refetchRawNFTOfUser();
+        refetchRawAPR();
     }, [isConnected, rawBalanceOfUser, rawNFTOfUser, rawAPR]);
 
     const initializeContracts = useCallback(async () => {
@@ -116,13 +117,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     useEffect(() => {
         initializeContracts();
     }, [initializeContracts]);
-
-    const resetState = () => {
-        setIsAdmin(false);
-        setTokenAContract('0');
-        setNFTBBalance('0');
-        setBaseAPR(0);
-    };
 
     const contextValue = useMemo(() => ({
         address,
