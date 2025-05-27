@@ -3,7 +3,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 import { createPublicClient, http, decodeEventLog, parseAbi } from 'viem';
 import { bscTestnet } from 'viem/chains';
-import { TransactionType } from "../types/TransactionType";
+import { TransactionType } from "../types/transaction.type";
 import { crawlDataToDB } from "../services/transaction.service";
 import TransactionModel from "../models/transactions.model"; // Import your Transaction model here
 
@@ -26,7 +26,12 @@ const abi = parseAbi([
     "event APRUpdated(address indexed user, uint256 newBaseAPR)"
 ]);
 
-const getTransactions = async (): Promise<TransactionType[]> => {
+type responseCrawl = {
+    success: boolean,
+    message: string
+};
+
+const getTransactions = async (): Promise<responseCrawl> => {
     const result: TransactionType[] = [];
 
     try {
@@ -56,8 +61,12 @@ const getTransactions = async (): Promise<TransactionType[]> => {
             if (!receipt.logs.length) continue;
 
             const timestampInMillis = parseInt(tx.timeStamp) * 1000;
-            const formattedDate = new Date(timestampInMillis).toISOString().replace("T", " ").substring(0, 19);
-
+            const vnOffsetInMs = 7 * 60 * 60 * 1000;
+            const vnTime = new Date(timestampInMillis + vnOffsetInMs)
+              .toISOString()
+              .replace("T", " ")
+              .substring(0, 19);
+            
             for (const log of receipt.logs) {
                 try {
                     const decoded = decodeEventLog({ abi, data: log.data, topics: log.topics });
@@ -99,7 +108,7 @@ const getTransactions = async (): Promise<TransactionType[]> => {
                         TokenID: tokenId,
                         APR: apr,
                         GasUsed: tx.gasUsed,
-                        Timestamp: formattedDate,
+                        Timestamp: vnTime,
                     };
 
                     const exists = await TransactionModel.findOne({ TransactionHash: tx.hash });
@@ -108,20 +117,29 @@ const getTransactions = async (): Promise<TransactionType[]> => {
                     }
 
                 } catch {
-                    console.error("Error decoding log:", log);
+                    // console.error("Error decoding log:", log);
                 }
             }
         }
 
         if (result.length > 0) {
             var responseCrawl = await crawlDataToDB(result);
-            console.log("response ===================================================", responseCrawl);
+            return {
+                success: responseCrawl.success,
+                message: responseCrawl.message
+            };
         }
     } catch (error) {
         console.error("Error fetching transactions:", error);
+        return {
+            success: false,
+            message: "Error fetching transactions"
+        }
     }
-
-    return result;
+    return {
+        success: true,
+        message: "No new transactions found."
+    }
 };
 
 export { getTransactions };

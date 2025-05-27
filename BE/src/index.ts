@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
     res.send("Hello World! 123");
 });
 
-app.get("api/transactions", transRoutes)
+app.use("/api/transactions", transRoutes)
 
 setInterval(() => {
     getTransactions().then(() => {

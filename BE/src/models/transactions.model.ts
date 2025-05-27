@@ -12,7 +12,7 @@ export interface TransactionDocument extends mongoose.Document {
     TokenID: string;
     APR: string;
     GasUsed: string;
-    Timestamp: Date;
+    Timestamp: string;
 }
 
 const transactionSchema = new mongoose.Schema<TransactionDocument>({
@@ -50,7 +50,7 @@ const transactionSchema = new mongoose.Schema<TransactionDocument>({
         required: true,
     },
     Timestamp: {
-        type: Date,
+        type: String,
         required: true,
     }
 }, { timestamps: true });
