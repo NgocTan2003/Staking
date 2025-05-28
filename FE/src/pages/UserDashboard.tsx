@@ -1,6 +1,6 @@
 import { Box, CircularProgress, Checkbox } from '@mui/material';
 import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useEffect, useState, useCallback, } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAccount } from 'wagmi'
 import {
     useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove, useWriteStakingNftDeposit,
@@ -26,10 +26,10 @@ const UserDashboard = () => {
     const [stakedNFTs, setStakedNFTs] = useState<any[]>([]);
     const [userAPR, setUserAPR] = useState<number>(0);
     const [totalReward, setTotalReward] = useState<string>('0');
-    const [lockTime, setLockTime] = useState<number>(0);
+    const [flagLock, setFlagLock] = useState<boolean>(false);
     const [selectedNFTsForDeposit, setSelectedNFTsForDeposit] = useState<string[]>([]);
     const [shouldCalculateReward, setShouldCalculateReward] = useState(true);
-
+    const [timeLeft, setTimeLeft] = useState("");
     const { data: rawStakeInfo, refetch: refetchStakeInfo } = useReadStakingGetStakeDetail(
         address ? {
             args: [address],
@@ -57,20 +57,61 @@ const UserDashboard = () => {
     });
 
     useEffect(() => {
-        if (rawStakeInfo && isConnected) {
+        let countdownInterval: NodeJS.Timeout | undefined;
+
+        const startCountdown = (targetTime: bigint) => {
+            countdownInterval = setInterval(() => {
+                const now = Date.now();
+                const target = Number(targetTime) * 1000;
+                const diff = target - now;
+
+                if (diff <= 0) {
+                    clearInterval(countdownInterval);
+                    setFlagLock(false)
+                    return;
+                }
+                setFlagLock(true)
+                const seconds = Math.floor(diff / 1000) % 60;
+                const minutes = Math.floor(diff / 1000 / 60) % 60;
+                const hours = Math.floor(diff / 1000 / 60 / 60) % 24;
+
+                setTimeLeft(`${hours} hour ${minutes} minutes ${seconds} seconds`);
+            }, 1000);
+        };
+
+        if (rawStakeInfo && isConnected && address) {
             const stakedAmount = convertToString(rawStakeInfo[0] as bigint);
             setStakedAmonut(stakedAmount);
             const stakedNFTs = Number(rawStakeInfo[4]);
             setstakedNFTsCount(stakedNFTs);
+            const lockEndTime = rawStakeInfo[3];
+
+            if (Number(lockEndTime) * 1000 > Date.now()) {
+                setFlagLock(true)
+                startCountdown(lockEndTime);
+            } else {
+                setFlagLock(false)
+                setTimeLeft('0 hour 0 minutes 0 seconds');
+            }
+
             const userAPR = Number(rawCurrentApr) / 100;
             setUserAPR(userAPR);
+        } else {
+            setStakedAmonut("0");
+            setstakedNFTsCount(0);
+            setUserAPR(0);
+            setTotalReward("0");
+            setTimeLeft("");
         }
-    }, [rawStakeInfo, rawStakeInfo, rawCurrentApr, isConnected]);
+
+        return () => {
+            if (countdownInterval) clearInterval(countdownInterval);
+        };
+    }, [rawStakeInfo, rawCurrentApr, isConnected, address]);
 
     useEffect(() => {
         if (successDeposit) {
             toast.success('Deposit Success');
-            setLockTime(30);
         }
     }, [successDeposit]);
 
@@ -103,14 +144,6 @@ const UserDashboard = () => {
             return () => clearInterval(interval);
         }
     }, [address, fetchTotalReward, shouldCalculateReward]);
-
-    useEffect(() => {
-        if (lockTime <= 0) return;
-        const interval = setInterval(() => {
-            setLockTime(prev => prev - 1);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [lockTime]);
 
     const handleFaucet = async () => {
         try {
@@ -200,7 +233,6 @@ const UserDashboard = () => {
     }
 
     const handleDepositNFTs = async () => {
-        console.log('Selected NFTs for deposit:', selectedNFTsForDeposit);
         try {
             if (!isApprovedForAll) {
                 const approveTx = await setApprovalForAll({
@@ -213,7 +245,6 @@ const UserDashboard = () => {
             }
 
             for (const nftId of selectedNFTsForDeposit) {
-                console.log('Depositing NFT ID:', nftId);
                 const tx = await nftDeposit({
                     args: [BigInt(nftId)],
                 });
@@ -252,7 +283,6 @@ const UserDashboard = () => {
             setstakedNFTsCount(0);
             setStakedNFTs([]);
             setTotalReward('0');
-            setLockTime(0);
             setUserAPR(0);
             setSelectedNFTsForDeposit([]);
             toast.success('Withdraw success');
@@ -290,7 +320,7 @@ const UserDashboard = () => {
                                                 <div className="">Staked NFTs: {stakedNFTsCount}</div>
                                                 <div className="">User APR: {userAPR} %</div>
                                                 <div className="">Total Reward: {totalReward} ETH</div>
-                                                <div className="">LockTime: {lockTime}s</div>
+                                                <div className="">LockTime: {timeLeft}</div>
                                             </>
                                         ) : (
                                             <>
@@ -301,7 +331,7 @@ const UserDashboard = () => {
 
                                     <Button variant="contained"
                                         onClick={handleWithdraw}
-                                        disabled={!isConnected || lockTime > 0 || stakedAmount == '0'}
+                                        disabled={!isConnected || flagLock || stakedAmount == '0'}
                                         color="primary">
                                         {pendingWithdraw ? (
                                             <>
@@ -314,7 +344,7 @@ const UserDashboard = () => {
 
                                     <Button variant="contained"
                                         onClick={handleClaimReward}
-                                        disabled={!isConnected || lockTime > 0 || stakedAmount == '0'}
+                                        disabled={!isConnected || flagLock || stakedAmount == '0'}
                                         color="primary">
                                         {pendingClaimReward ? (
                                             <>

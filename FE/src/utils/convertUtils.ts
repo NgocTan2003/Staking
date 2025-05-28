@@ -2,6 +2,10 @@ import { formatEther } from 'viem';
 
 
 export const convertToString = (value: bigint): string => {
+    if (value === undefined || value === null) {
+        throw new Error("Invalid value: value is undefined or null");
+    }
+
     const valueETH = formatEther(value as bigint)
     const formattedValue = new Intl.NumberFormat('vi-VN', {
         minimumFractionDigits: 2,
@@ -22,3 +26,4 @@ export function truncateMiddle(str: string, startLength: number = 5, endLength: 
     }
     return str.slice(0, startLength) + '...' + str.slice(-endLength);
 }
+
