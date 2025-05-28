@@ -66,7 +66,7 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     useEffect(() => {
         if (address && isConnected) {
             const isAdminAddress = address.toLowerCase() === import.meta.env.VITE_ADMIN_ADDRESS.toLowerCase();
-            setIsAdmin(isAdminAddress);
+            setIsAdmin(isAdminAddress)
         } else {
             setIsAdmin(false);
         }
@@ -79,20 +79,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
             refetchContractBalance();
         }
     }, [rawContractBalance]);
-
-    useEffect(() => {
-        if (rawBalanceOfUser || rawContractBalance || rawNFTOfUser) {
-            if (isConnected) {
-                const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
-                setUserBalance(userBalanceConvert);
-                const userNFTCountConvert = Number(rawNFTOfUser);
-                setUserNFTCount(userNFTCountConvert);
-            }
-
-            const value = convertToString(rawContractBalance as bigint);
-            setTokenAContract(value);
-        }
-    }, [rawBalanceOfUser, rawContractBalance, rawNFTOfUser])
 
     const updateBaseInfoUser = useCallback(async () => {
         if (rawBalanceOfUser) {

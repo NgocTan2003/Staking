@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button, Select, MenuItem, type SelectChangeEvent } from "@mui/material";
 import { toast } from 'react-toastify';
-import { useGetPaginatedTransaction } from "../utils/hook/useTransaction";
+import { useGetPaginatedAllTransaction, useGetPaginatedUserTransaction } from "../utils/hook/useTransaction";
 import { useStakingContext } from "../contexts/StakingContext";
 import type { TransactionType } from "../types/transactions.type";
 import { convertToString, truncateMiddle } from '../utils/convertUtils';
@@ -13,18 +13,34 @@ import config from '../config';
 
 
 const TransactionHistory = () => {
-    const [totalTransaction, setTotalTransaction] = useState<number>(0);
-    const [arrTransaction, setArrTransaction] = useState<TransactionType[]>([]); 4
-    const { isConnected } = useAccount();
-    const [newAPR, setNewAPR] = useState<number>();
+    const [arrTransaction, setArrTransaction] = useState<TransactionType[]>([]);
+    const [totalRecord, setTotalRecord] = useState<number>(0);
+    const { isConnected, address } = useAccount();
+    const [newAPR, setNewAPR] = useState<number>(0);
     const [keySearch, setKeySearch] = useState<string>('');
     const [sortBy, setSortBy] = useState<string>('Timestamp');
     const [sortOrder, setSortOrder] = useState<string>('desc');
     const [page, setPage] = useState<number>(1);
     const [limit, setLimit] = useState<number>(5);
-    const { allTransactions, totalDocs, totalPages, currentPage, isLoading, refetch } = useGetPaginatedTransaction(page, limit, sortBy, sortOrder);
+    const { allTransactions, totalDocs: totalAllTrans, totalAllPages, refetch: refetchAllTrans } = useGetPaginatedAllTransaction(page, limit, sortBy, sortOrder);
+    const { allUserTransactions, totalDocs: totalUserTrans, totalUserPages, refetch: refetchUserTrans } = useGetPaginatedUserTransaction(address as `0x${string}`, page, limit, sortBy, sortOrder);
     const { isAdmin, updateBaseInfoUser } = useStakingContext();
     const { writeContractAsync: updateAPR } = useWriteStakingUpdateApr();
+
+    useEffect(() => {
+        if (isAdmin !== undefined) {
+            if (isAdmin) {
+                refetchAllTrans();
+                setArrTransaction(allTransactions);
+                setTotalRecord(totalAllTrans);
+            } else {
+                refetchUserTrans();
+                setArrTransaction(allUserTransactions);
+                setTotalRecord(totalUserTrans);
+            }
+        }
+    }, [isAdmin, allTransactions, totalAllTrans, allUserTransactions, totalUserTrans, refetchAllTrans, refetchUserTrans])
+
 
     const handleChangeAPR = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
@@ -53,10 +69,21 @@ const TransactionHistory = () => {
         setSortBy(e.target.value)
     };
 
-
     const handleSortOrderChange = () => {
         setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     }
+
+    // useEffect(() => {
+    //     if (isAdmin) {
+    //         refetchAllTrans();
+    //     } else {
+    //         refetchUserTrans();
+    //     }
+    // }, [isAdmin, refetchAllTrans, refetchUserTrans]);
+
+    useEffect(() => {
+        setPage(1)
+    }, [address])
 
     if (!isConnected) {
         return <div className="text-red-500 text-center text-xl mt-4">Please connect your wallet to view transaction history.</div>
@@ -68,7 +95,7 @@ const TransactionHistory = () => {
                 All Transactions
             </div>
             <div className="text-sm mt-4">
-                Total Transactions: {totalDocs}
+                Total Transactions: {totalRecord}
             </div>
             {isAdmin ? <>
                 <div className="mt-2 flex gap-2">
@@ -77,10 +104,14 @@ const TransactionHistory = () => {
                 </div>
             </> : <></>}
             <div className="flex gap-3 mt-3 flex items-center">
-                <div>
-                    <input className="p-2 border-1 rounded mr-2" placeholder="Search (Address/Block)" onChange={(e) => setKeySearch(e.target.value)} />
-                    <Button variant="contained" disabled={keySearch == ''}>Search</Button>
-                </div>
+                {
+                    isAdmin ? <>
+                        <div>
+                            <input className="p-2 border-1 rounded mr-2" placeholder="Search (Address)" onChange={(e) => setKeySearch(e.target.value)} />
+                            <Button variant="contained" disabled={keySearch == ''}>Search</Button>
+                        </div>
+                    </> : <></>
+                }
                 <div >
                     <Select className="w-[auto] mr-2" value={sortBy} onChange={(e) => handleSortChange(e)}>
                         <MenuItem value="Timestamp">Timestamp</MenuItem>
@@ -110,9 +141,9 @@ const TransactionHistory = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {allTransactions.map((item: TransactionType) => (
+                            {arrTransaction.map((item: TransactionType, index) => (
                                 <TableRow
-
+                                    key={index}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                 >
                                     <TableCell component="th" scope="row">
@@ -150,15 +181,16 @@ const TransactionHistory = () => {
                             <button
                                 className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages}
-                            >
+                                disabled={
+                                    isAdmin ? page === totalAllPages : page === totalUserPages
+                                } >
                                 Next
                             </button>
                         </div>
                     </div>
                 </TableContainer>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 

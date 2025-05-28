@@ -1,19 +1,52 @@
 import { useQuery } from "@tanstack/react-query"
-import { getTransactionPaginated } from '../../services/transaction.service'
+import { getAllTransactionPaginated, getUserTransactionPaginated } from '../../services/transaction.service'
 
 
-const useGetPaginatedTransaction = (page: number, limit: number, sort: string, order: string) => {
+const useGetPaginatedAllTransaction = (page: number, limit: number, sort: string, order: string) => {
     const { data, isLoading, refetch } = useQuery({
-        queryKey: ['paginatedTransactions', page, limit, sort, order],
-        queryFn: () => getTransactionPaginated(page, limit, sort, order),
+        queryKey: ['paginatedAllTransactions', page, limit, sort, order],
+        queryFn: () => getAllTransactionPaginated(page, limit, sort, order),
         staleTime: 5000,
     });
 
     return {
         totalDocs: data?.data.transactions.totalDocs || 0,
-        allTransactions: data?.data.
-        transactions.docs || [],
-        totalPages: data?.data.transactions.totalPages || 1,
+        allTransactions: data?.data.transactions.docs || [],
+        totalAllPages: data?.data.transactions.totalPages || 1,
+        currentPage: data?.data.transactions.page || page,
+        isLoading,
+        refetch,
+    };
+};
+
+const useGetPaginatedUserTransaction = (address: string, page: number, limit: number, sort: string, order: string) => {
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['paginatedUserTransactions', address, page, limit, sort, order],
+        queryFn: () => getUserTransactionPaginated(address, page, limit, sort, order),
+        staleTime: 5000,
+    });
+
+    return {
+        totalDocs: data?.data.transactions.totalDocs || 0,
+        allUserTransactions: data?.data.transactions.docs || [],
+        totalUserPages: data?.data.transactions.totalPages || 1,
+        currentPage: data?.data.transactions.page || page,
+        isLoading,
+        refetch,
+    };
+};
+
+const useSearchTransaction = (address: string, page: number, limit: number, sort: string, order: string) => {
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['searchTransactions', address, page, limit, sort, order],
+        queryFn: () => getUserTransactionPaginated(address, page, limit, sort, order),
+        staleTime: 5000,
+    });
+
+    return {
+        totalDocs: data?.data.transactions.totalDocs || 0,
+        dataSearchTransactions: data?.data.transactions.docs || [],
+        totalSearchPages: data?.data.transactions.totalPages || 1,
         currentPage: data?.data.transactions.page || page,
         isLoading,
         refetch,
@@ -21,4 +54,4 @@ const useGetPaginatedTransaction = (page: number, limit: number, sort: string, o
 };
 
 
-export { useGetPaginatedTransaction };
+export { useGetPaginatedAllTransaction, useGetPaginatedUserTransaction, useSearchTransaction };
