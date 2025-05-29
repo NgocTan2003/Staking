@@ -6,6 +6,7 @@ import { APP_ORIGIN, PORT } from "./constants/env";
 import transRoutes from "./routes/trans.route";
 import { getTransactions } from "./crawl/crawlTransaction";
 import { setInterval } from "timers";
+ 
 
 const app = express();
 

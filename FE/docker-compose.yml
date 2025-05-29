@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  vite-app:
+    build: .
+    container_name: FE_staking
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000/
+    restart: unless-stopped

@@ -38,7 +38,6 @@ const useGetPaginatedUserTransaction = (address: string, page: number, limit: nu
 };
 
 const useSearchTransaction = (flagSearch: boolean, address: string, page: number, limit: number, sort: string, order: string) => {
-    console.log("aaa", flagSearch)
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['searchTransactions', address, page, limit, sort, order],
         queryFn: () => searchTransaction(address, page, limit, sort, order),
