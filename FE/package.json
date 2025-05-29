@@ -13,6 +13,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@metamask/detect-provider": "^2.0.0",
+    "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@rainbow-me/rainbowkit": "^2.2.5",
     "@reown/appkit": "^1.7.6",

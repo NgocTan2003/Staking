@@ -30,7 +30,7 @@ const Header = () => {
                 <Link to="/" className="cursor-pointer hover:text-blue-200">Home</Link>
                 <Link to="/history" className="cursor-pointer hover:text-blue-200">History</Link>
             </div>
-            <div className="flex">
+            <div className="flex">                            
                 {isConnected ? (
                     <>
                         <div className="flex items-center gap-4 mr-4 text-sm">

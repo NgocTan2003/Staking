@@ -5,7 +5,6 @@ import React, {
     useMemo,
     useCallback,
     useEffect,
-    use,
 } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount } from 'wagmi';

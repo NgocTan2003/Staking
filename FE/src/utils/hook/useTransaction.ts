@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { getAllTransactionPaginated, getUserTransactionPaginated } from '../../services/transaction.service'
+import { getAllTransactionPaginated, getUserTransactionPaginated, searchTransaction } from '../../services/transaction.service'
 
 
 const useGetPaginatedAllTransaction = (page: number, limit: number, sort: string, order: string) => {
@@ -23,6 +23,7 @@ const useGetPaginatedUserTransaction = (address: string, page: number, limit: nu
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['paginatedUserTransactions', address, page, limit, sort, order],
         queryFn: () => getUserTransactionPaginated(address, page, limit, sort, order),
+        enabled: !!address,
         staleTime: 5000,
     });
 
@@ -36,10 +37,12 @@ const useGetPaginatedUserTransaction = (address: string, page: number, limit: nu
     };
 };
 
-const useSearchTransaction = (address: string, page: number, limit: number, sort: string, order: string) => {
+const useSearchTransaction = (flagSearch: boolean, address: string, page: number, limit: number, sort: string, order: string) => {
+    console.log("aaa", flagSearch)
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['searchTransactions', address, page, limit, sort, order],
-        queryFn: () => getUserTransactionPaginated(address, page, limit, sort, order),
+        queryFn: () => searchTransaction(address, page, limit, sort, order),
+        enabled: !!address && flagSearch,
         staleTime: 5000,
     });
 
