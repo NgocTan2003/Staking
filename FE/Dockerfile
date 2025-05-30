@@ -12,7 +12,7 @@
     COPY . .
     
     # Cài esbuild nếu cần (fix version mismatch)
-    RUN npm install esbuild --force
+#     RUN npm install esbuild --force
     
     # Build dự án (ra thư mục dist/)
     RUN npm run build
