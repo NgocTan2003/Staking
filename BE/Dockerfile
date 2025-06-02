@@ -28,7 +28,7 @@ COPY --from=builder /app/package*.json ./
 RUN npm install --production
 
 # Expose port
-EXPOSE 3333
+EXPOSE 8000
 
 # Start the server
 CMD ["node", "dist/index.js"]
