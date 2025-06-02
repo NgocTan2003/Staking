@@ -170,7 +170,7 @@ const TransactionHistory = () => {
                                     <TableCell>From</TableCell>
                                     <TableCell>To</TableCell>
                                     <TableCell>Amount (ETH)</TableCell>
-                                    <TableCell>Token ID</TableCell>
+                                    <TableCell>NFT ID</TableCell>
                                     <TableCell>APR (%)</TableCell>
                                     <TableCell>Gas Used (Wei)</TableCell>
                                     <TableCell>Timestamp</TableCell>
@@ -183,13 +183,38 @@ const TransactionHistory = () => {
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
                                         <TableCell component="th" scope="row">
-                                            {truncateMiddle(item.TransactionHash)}
+                                            <a
+                                                href={`https://testnet.bscscan.com/tx/${item.TransactionHash}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="no-underline hover:underline hover:text-blue-800"
+                                            >
+                                                {truncateMiddle(item.TransactionHash)}
+                                            </a>
                                         </TableCell>
                                         <TableCell>{item.EventType}</TableCell>
                                         <TableCell>{item.BlockNumber}</TableCell>
-                                        <TableCell>{truncateMiddle(item.From)}</TableCell>
-                                        <TableCell>{truncateMiddle(item.To)}</TableCell>
-                                        <TableCell>{convertToString(BigInt(item.Amount))}</TableCell>
+                                        <TableCell>
+                                            <a
+                                                href={`https://testnet.bscscan.com/address/${item.From}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="no-underline hover:underline hover:text-blue-800"
+                                            >
+                                                {truncateMiddle(item.From)}
+                                            </a>
+                                        </TableCell>
+                                        <TableCell>
+                                            <a
+                                                href={`https://testnet.bscscan.com/address/${item.To}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="no-underline hover:underline hover:text-blue-800"
+                                            >
+                                                {truncateMiddle(item.To)}
+                                            </a>
+                                        </TableCell>
+                                        <TableCell>{item.Amount === "" ? "" : convertToString(BigInt(item.Amount))}</TableCell>
                                         <TableCell>{item.TokenID}</TableCell>
                                         <TableCell>{Number(item.APR) / 100}</TableCell>
                                         <TableCell>{item.GasUsed}</TableCell>
@@ -228,7 +253,7 @@ const TransactionHistory = () => {
                             </div>
 
                             <div className="flex items-center gap-2 mr-3">
-                                <div className="mr-3">Total Pages: {totalAllPages}</div>
+                                <div className="mr-3">Total Pages: {flagSearch ? totalSearchPages : (isAdmin ? totalAllPages : totalUserPages)}</div>
                                 <div>Rows per page:</div>
                                 <Select className="w-auto mr-2" value={limit} onChange={(e) => {
                                     setLimit(Number(e.target.value))

@@ -31,7 +31,7 @@ setInterval(() => {
     }).catch((error) => {
         console.error("Error during crawling transactions:", error);
     });
-}, 120000);
+}, 20000);
 
 
 app.listen(Number(PORT), "0.0.0.0", async () => {
