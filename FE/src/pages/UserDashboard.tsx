@@ -206,8 +206,13 @@ const UserDashboard = () => {
         try {
             setEffectDeposit(true);
             const amountBigInt = parseUnits(amountDeposit.toString(), 18);
-            await approve({
+            const approveTx = await approve({
                 args: [stakingContractAddress, amountBigInt],
+            });
+
+            await waitForTransactionReceipt(config, {
+                hash: approveTx,
+                timeout: 30_000,
             });
 
             const tx = await deposit({
@@ -255,6 +260,8 @@ const UserDashboard = () => {
 
     const handleDepositNFTs = async () => {
         try {
+            setEffectDepositNFT(true);
+
             if (!isApprovedForAll) {
                 const approveTx = await setApprovalForAll({
                     args: [stakingContractAddress, true],
@@ -265,7 +272,6 @@ const UserDashboard = () => {
                 });
             }
 
-            setEffectDepositNFT(true);
             for (const nftId of selectedNFTsForDeposit) {
                 const tx = await nftDeposit({
                     args: [BigInt(nftId)],
