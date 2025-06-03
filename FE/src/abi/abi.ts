@@ -240,7 +240,7 @@ export const nftbAbi = [
   },
 ] as const
 
-export const nftbAddress = '0xD311D4768d400c5e05Ebfa64d6412F7c6929742F' as const
+export const nftbAddress = '0x9B671550b3c14D9De79cfa9b37D7097FfA371BA4' as const
 
 export const nftbConfig = { address: nftbAddress, abi: nftbAbi } as const
 
@@ -466,6 +466,13 @@ export const stakingAbi = [
   {
     type: 'function',
     inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
+    name: 'getListStakedNFT',
+    outputs: [{ name: '', internalType: 'uint256[]', type: 'uint256[]' }],
+    stateMutability: 'view',
+  },
+  {
+    type: 'function',
+    inputs: [{ name: 'user', internalType: 'address', type: 'address' }],
     name: 'getLockTimeRemaining',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
     stateMutability: 'view',
@@ -591,7 +598,7 @@ export const stakingAbi = [
 ] as const
 
 export const stakingAddress =
-  '0x2D208723De22B4b034a645D270C84b92250E4519' as const
+  '0x4F4AFb482218Df63EaFB71D9592Ff0718CF97dbf' as const
 
 export const stakingConfig = {
   address: stakingAddress,
@@ -866,7 +873,7 @@ export const tokenAAbi = [
 ] as const
 
 export const tokenAAddress =
-  '0xa99270005695665a0E3b1F2f78b5C78601bA9C09' as const
+  '0xC44Cd71444E55ec722c3E98D281599f397D46454' as const
 
 export const tokenAConfig = { address: tokenAAddress, abi: tokenAAbi } as const
 
@@ -1192,6 +1199,16 @@ export const useReadStakingGetCurrentApr = /*#__PURE__*/ createUseReadContract({
   address: stakingAddress,
   functionName: 'getCurrentAPR',
 })
+
+/**
+ * Wraps __{@link useReadContract}__ with `abi` set to __{@link stakingAbi}__ and `functionName` set to `"getListStakedNFT"`
+ */
+export const useReadStakingGetListStakedNft =
+  /*#__PURE__*/ createUseReadContract({
+    abi: stakingAbi,
+    address: stakingAddress,
+    functionName: 'getListStakedNFT',
+  })
 
 /**
  * Wraps __{@link useReadContract}__ with `abi` set to __{@link stakingAbi}__ and `functionName` set to `"getLockTimeRemaining"`

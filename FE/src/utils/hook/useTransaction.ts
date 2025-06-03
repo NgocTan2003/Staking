@@ -9,8 +9,6 @@ const useGetPaginatedAllTransaction = (page: number, limit: number, sort: string
         staleTime: 5000,
     });
 
-    console.log("Paginated All Transactions Data:", data?.data.transactions);
-
     return {
         totalDocs: data?.data.transactions.totalDocs || 0,
         allTransactions: data?.data.transactions.docs || [],

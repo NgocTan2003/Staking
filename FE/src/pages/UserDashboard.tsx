@@ -1,6 +1,5 @@
-import { Box, CircularProgress, Checkbox } from '@mui/material';
-import { Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useEffect, useState, useCallback } from "react";
+import { Box, CircularProgress, Checkbox, Button, Typography, TextField, Stack, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { useEffect, useState, useCallback, use } from "react";
 import { useAccount } from 'wagmi'
 import {
     useReadStakingGetStakeDetail, useWriteTokenAFaucet, useWriteStakingDeposit, useWriteTokenAApprove, useWriteStakingNftDeposit,
@@ -13,6 +12,7 @@ import config from '../config';
 import { useStakingContext } from "../contexts/StakingContext";
 import { toast } from 'react-toastify';
 import { convertToString, convertToNumber } from "../utils/convertUtils";
+import { NFTDeposit } from '../components/NFTDeposit';
 
 const stakingContractAddress = import.meta.env.VITE_ADDRESS_STAKING as `0x${string}`;
 
@@ -30,6 +30,8 @@ const UserDashboard = () => {
     const [selectedNFTsForDeposit, setSelectedNFTsForDeposit] = useState<string[]>([]);
     const [shouldCalculateReward, setShouldCalculateReward] = useState(true);
     const [timeLeft, setTimeLeft] = useState("");
+    const [disabledDeposit, setDisabledDeposit] = useState(true);
+    const [reloadWithDrawNFT, setReloadWithDrawNFT] = useState(false);
     const { data: rawStakeInfo, refetch: refetchStakeInfo } = useReadStakingGetStakeDetail(
         address ? {
             args: [address],
@@ -37,7 +39,6 @@ const UserDashboard = () => {
             args: ['0x0000000000000000000000000000000000000000'],
         }
     );
-    const [disabledDeposit, setDisabledDeposit] = useState(true);
     const { writeContractAsync: deposit, isSuccess: successDeposit, isPending: pendingDeposit } = useWriteStakingDeposit();
     const { writeContractAsync: approve, isPending: pendingApprove } = useWriteTokenAApprove();
     const { writeContractAsync: faucet, isPending: pendingFaucet } = useWriteTokenAFaucet();
@@ -48,7 +49,7 @@ const UserDashboard = () => {
         args: [address as `0x${string}`],
     });
     const { writeContractAsync: claimReward, isSuccess: successClaimReward, isPending: pendingClaimReward } = useWriteStakingClaimReward();
-    const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA, isAdmin } = useStakingContext();
+    const { tokenAContract, userBalance, updateBaseInfoUser, updateBalancesTokenA } = useStakingContext();
     const { writeContractAsync: withdraw, isSuccess: successWithdraw, isPending: pendingWithdraw } = useWriteStakingWithDrawn();
     const { writeContractAsync: nftDeposit, isPending: pendingNFTDeposit } = useWriteStakingNftDeposit();
     const { writeContractAsync: setApprovalForAll } = useWriteNftbSetApprovalForAll();
@@ -121,6 +122,15 @@ const UserDashboard = () => {
             setNFTsOwned(ownedNFTs);
         }
     }, [rawNFTs, isConnected]);
+
+    useEffect(() => {
+        const reload = async () => {
+            await refetchStakeInfo();
+            await refetchCurrentApr();
+            await refetchRawNFTs();
+        };
+        reload();
+    }, [reloadWithDrawNFT]);
 
     const fetchTotalReward = useCallback(async () => {
         await refetchStakeInfo();
@@ -259,6 +269,7 @@ const UserDashboard = () => {
                 await refetchCurrentApr();
                 await refetchRawNFTs();
             }
+            setReloadWithDrawNFT(!reloadWithDrawNFT)
             setSelectedNFTsForDeposit([]);
         } catch (error) {
             console.error("Error depositing NFTs:", error);
@@ -354,6 +365,8 @@ const UserDashboard = () => {
                                             'CLAIM REWARDS'
                                         )}
                                     </Button>
+
+                                    <NFTDeposit reloadWithDrawNFT={reloadWithDrawNFT} setReloadWithDrawNFT={setReloadWithDrawNFT} />
                                 </Stack>
                             </Box>
                         </div>

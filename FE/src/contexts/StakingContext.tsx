@@ -80,9 +80,11 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     }, [rawContractBalance]);
 
     const updateBaseInfoUser = useCallback(async () => {
-        const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
-        setUserBalance(userBalanceConvert);
         refetchBalanceOfUser();
+        if (rawBalanceOfUser) {
+            const userBalanceConvert = convertToString(rawBalanceOfUser as bigint);
+            setUserBalance(userBalanceConvert);
+        }
         const userNFTCountConvert = Number(rawNFTOfUser);
         const aprConvert = Number(rawAPR) / 100;
         setBaseAPR(aprConvert);
@@ -92,7 +94,6 @@ export const StakingProvider = ({ children }: StakingProviderProps) => {
     }, [isConnected, rawBalanceOfUser, rawNFTOfUser, rawAPR]);
 
     const initializeContracts = useCallback(async () => {
-        console.log('Initializing contracts...');
         await updateBalancesTokenA();
         await updateBaseInfoUser();
     }, [isConnected, updateBalancesTokenA, updateBaseInfoUser]);
