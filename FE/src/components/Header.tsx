@@ -6,23 +6,19 @@ import { toast } from 'react-toastify';
 import { useStakingContext } from "../contexts/StakingContext";
 
 const Header = () => {
-    const { isConnected, status } = useAccount();
-    const [prevConnected, setPrevConnected] = useState(false);
+    const { isConnected } = useAccount();
     const { baseAPR, userBalance, userNFTCount, updateBalancesTokenA } = useStakingContext();
 
     useEffect(() => {
-        if (isConnected && !prevConnected) {
+        const wasConnected = localStorage.getItem('wasConnected') === 'true';
+
+        if (isConnected && !wasConnected) {
             updateBalancesTokenA();
             toast.success('Connect Wallet Success');
         }
-        setPrevConnected(isConnected);
-    }, [isConnected, prevConnected]);
 
-    useEffect(() => {
-        if (status === 'disconnected' && prevConnected) {
-            toast.success('Wallet disconnected');
-        }
-    }, [status, prevConnected]);
+        localStorage.setItem('wasConnected', isConnected.toString());
+    }, [isConnected]);
 
     return (
         <div className="flex justify-between items-center p-8 bg-gray-400 text-lg">
@@ -30,7 +26,7 @@ const Header = () => {
                 <Link to="/" className="cursor-pointer hover:text-blue-200">Home</Link>
                 <Link to="/history" className="cursor-pointer hover:text-blue-200">History</Link>
             </div>
-            <div className="flex">                            
+            <div className="flex">
                 {isConnected ? (
                     <>
                         <div className="flex items-center gap-4 mr-4 text-sm">

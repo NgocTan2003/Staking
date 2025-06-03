@@ -6,7 +6,6 @@ import { waitForTransactionReceipt } from '@wagmi/core';
 import { toast } from 'react-toastify';
 import config from '../config';
 
-
 interface NFTDepositProps {
     reloadWithDrawNFT: boolean;
     setReloadWithDrawNFT: (value: boolean) => void;
@@ -20,6 +19,8 @@ export const NFTDeposit = ({ reloadWithDrawNFT, setReloadWithDrawNFT }: NFTDepos
         args: [address as `0x${string}`],
     });
     const { writeContractAsync: withDrawNFT, isPending: pendingWithDrawNFT } = useWriteStakingWithDrawnNft();
+    const [effectWithDrawNFT, setEffectWithDrawNFT] = useState(false);
+
     useEffect(() => {
         refetchStakedNFTOfUser();
         if (rawStakedNFTs) {
@@ -30,6 +31,7 @@ export const NFTDeposit = ({ reloadWithDrawNFT, setReloadWithDrawNFT }: NFTDepos
 
     const handleWithDrawNFT = async () => {
         try {
+            setEffectWithDrawNFT(true);
             for (const nftId of selectedNFT) {
                 const tx = await withDrawNFT({
                     args: [[BigInt(nftId)]],
@@ -42,6 +44,7 @@ export const NFTDeposit = ({ reloadWithDrawNFT, setReloadWithDrawNFT }: NFTDepos
 
                 toast.success(`NFT #${nftId} WithDraw successfully`);
             }
+            setEffectWithDrawNFT(false);
             await refetchStakedNFTOfUser();
             setSelectedNFT([]);
             setReloadWithDrawNFT(!reloadWithDrawNFT)
@@ -88,7 +91,7 @@ export const NFTDeposit = ({ reloadWithDrawNFT, setReloadWithDrawNFT }: NFTDepos
                         fullWidth
                         onClick={handleWithDrawNFT}
                     >
-                        {pendingWithDrawNFT ? (
+                        {effectWithDrawNFT ? (
                             <>
                                 <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                             </>

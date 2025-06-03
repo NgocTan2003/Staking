@@ -38,13 +38,12 @@ const TransactionHistory = () => {
                 setTotalRecord(totalAllTrans);
             }
         } else {
-            refetchUserTrans();
             if (arrTransaction !== allUserTransactions || totalRecord !== totalUserTrans) {
                 setArrTransaction(allUserTransactions);
                 setTotalRecord(totalUserTrans);
             }
         }
-    }, [isAdmin, totalSearchTrans, allTransactions, totalAllTrans, allUserTransactions, totalUserTrans])
+    }, [isAdmin, allTransactions, allUserTransactions])
 
     const handleChangeAPR = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
@@ -93,11 +92,18 @@ const TransactionHistory = () => {
         setTotalRecord(totalAllTrans);
     }
 
-
     useEffect(() => {
+        setFlagSearch(false);
         setKeySearch('')
         setPage(1)
     }, [address])
+
+    useEffect(() => {
+        if (flagSearch && dataSearchTransactions && totalSearchTrans) {
+            setArrTransaction(dataSearchTransactions);
+            setTotalRecord(totalSearchTrans);
+        }
+    }, [flagSearch, dataSearchTransactions, totalSearchTrans]);
 
     if (!isConnected) {
         return <div className="text-red-500 text-center text-xl mt-4">Please connect your wallet to view transaction history.</div>

@@ -32,6 +32,11 @@ const UserDashboard = () => {
     const [timeLeft, setTimeLeft] = useState("");
     const [disabledDeposit, setDisabledDeposit] = useState(true);
     const [reloadWithDrawNFT, setReloadWithDrawNFT] = useState(false);
+    const [effectDeposit, setEffectDeposit] = useState(false);
+    const [effectDepositNFT, setEffectDepositNFT] = useState(false);
+    const [effectFaucet, setEffectFaucet] = useState(false);
+    const [effectClaimReward, setEffectClaimReward] = useState(false);
+    const [effectWithDrawTK, setEffectWithDrawTK] = useState(false);
     const { data: rawStakeInfo, refetch: refetchStakeInfo } = useReadStakingGetStakeDetail(
         address ? {
             args: [address],
@@ -112,6 +117,7 @@ const UserDashboard = () => {
 
     useEffect(() => {
         if (successDeposit) {
+            setEffectDeposit(false);
             toast.success('Deposit Success');
         }
     }, [successDeposit]);
@@ -157,6 +163,7 @@ const UserDashboard = () => {
 
     const handleFaucet = async () => {
         try {
+            setEffectFaucet(true);
             const amountBigInt = parseUnits(amountFaucet.toString(), 18);
             const tx = await faucet({
                 args: [amountBigInt],
@@ -166,6 +173,7 @@ const UserDashboard = () => {
                 hash: tx,
                 timeout: 30_000,
             });
+            setEffectFaucet(false);
             toast.success(`Faucet ${amountFaucet} tokenA success`)
 
             await updateBaseInfoUser();
@@ -196,6 +204,7 @@ const UserDashboard = () => {
 
     const handleDeposit = async () => {
         try {
+            setEffectDeposit(true);
             const amountBigInt = parseUnits(amountDeposit.toString(), 18);
             await approve({
                 args: [stakingContractAddress, amountBigInt],
@@ -225,6 +234,7 @@ const UserDashboard = () => {
     const handleClaimReward = async () => {
         try {
             if (isConnected && address) {
+                setEffectClaimReward(true);
                 const tx = await claimReward({});
 
                 await waitForTransactionReceipt(config, {
@@ -234,6 +244,7 @@ const UserDashboard = () => {
 
                 await refetchStakeInfo();
                 await updateBaseInfoUser();
+                setEffectClaimReward(false);
                 toast.success('Claim reward success');
             }
         } catch (error) {
@@ -254,6 +265,7 @@ const UserDashboard = () => {
                 });
             }
 
+            setEffectDepositNFT(true);
             for (const nftId of selectedNFTsForDeposit) {
                 const tx = await nftDeposit({
                     args: [BigInt(nftId)],
@@ -269,6 +281,7 @@ const UserDashboard = () => {
                 await refetchCurrentApr();
                 await refetchRawNFTs();
             }
+            setEffectDepositNFT(false);
             setReloadWithDrawNFT(!reloadWithDrawNFT)
             setSelectedNFTsForDeposit([]);
         } catch (error) {
@@ -279,6 +292,7 @@ const UserDashboard = () => {
 
     const handleWithdraw = async () => {
         try {
+            setEffectWithDrawTK(true);
             setShouldCalculateReward(false);
             const tx = await withdraw({});
             await waitForTransactionReceipt(config, {
@@ -296,6 +310,7 @@ const UserDashboard = () => {
             setTotalReward('0');
             setUserAPR(0);
             setSelectedNFTsForDeposit([]);
+            setEffectWithDrawTK(false);
             toast.success('Withdraw success');
         } catch (error) {
             setShouldCalculateReward(true);
@@ -344,7 +359,7 @@ const UserDashboard = () => {
                                         onClick={handleWithdraw}
                                         disabled={!isConnected || flagLock || stakedAmount == '0'}
                                         color="primary">
-                                        {pendingWithdraw ? (
+                                        {effectWithDrawTK ? (
                                             <>
                                                 <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                                             </>
@@ -357,7 +372,7 @@ const UserDashboard = () => {
                                         onClick={handleClaimReward}
                                         disabled={!isConnected || flagLock || stakedAmount == '0'}
                                         color="primary">
-                                        {pendingClaimReward ? (
+                                        {effectClaimReward ? (
                                             <>
                                                 <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                                             </>
@@ -387,7 +402,7 @@ const UserDashboard = () => {
                                     <TextField label="Amount Deposit" variant="outlined" value={amountDeposit} type="text" onChange={handleChangeDeposit} fullWidth />
 
                                     <Button variant="contained" disabled={disabledDeposit} onClick={handleDeposit} color="primary">
-                                        {pendingDeposit ? (
+                                        {effectDeposit ? (
                                             <>
                                                 <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                                             </>
@@ -433,7 +448,7 @@ const UserDashboard = () => {
                                             fullWidth
                                             onClick={handleDepositNFTs}
                                         >
-                                            {pendingNFTDeposit ? (
+                                            {effectDepositNFT ? (
                                                 <>
                                                     <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                                                 </>
@@ -451,7 +466,7 @@ const UserDashboard = () => {
                                             fullWidth
                                             onClick={handleFaucet}
                                         >
-                                            {pendingFaucet ? (
+                                            {effectFaucet ? (
                                                 <>
                                                     <CircularProgress size={20} color="inherit" style={{ marginRight: 8 }} />
                                                 </>
