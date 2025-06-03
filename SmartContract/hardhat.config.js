@@ -19,8 +19,8 @@ module.exports = {
   },
   networks:{
     bscTestnet: {
-      // url: `https://bsc-testnet-rpc.publicnode.com`,
-      url: `https://bsc-testnet.public.blastapi.io`,
+      url: `https://bsc-testnet-rpc.publicnode.com`,
+      // url: `https://bsc-testnet.public.blastapi.io`,
       // url: `https://bsc-testnet.drpc.org`,
       // url: `https://endpoints.omniatech.io/v1/bsc/testnet/public`,
       // url: `https://api.zan.top/bsc-testnet`,

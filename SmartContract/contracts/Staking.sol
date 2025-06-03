@@ -284,4 +284,10 @@ contract Staking is Ownable, ReentrancyGuard {
 
         return ownedNFTs;
     }
+
+    function getListStakedNFT(
+        address user
+    ) external view returns (uint256[] memory) {
+        return stakedNFTs[user];
+    }
 }
