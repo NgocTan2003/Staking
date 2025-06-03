@@ -315,6 +315,7 @@ const UserDashboard = () => {
             setStakedNFTs([]);
             setTotalReward('0');
             setUserAPR(0);
+            setReloadWithDrawNFT(!reloadWithDrawNFT)
             setSelectedNFTsForDeposit([]);
             setEffectWithDrawTK(false);
             toast.success('Withdraw success');
