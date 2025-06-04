@@ -214,14 +214,14 @@ contract Staking is Ownable, ReentrancyGuard {
             uint256 base = Math.mulDiv(
                 stake.amount * APR * (stake.nftDepositTime - stake.timestamp),
                 1,
-                365 days * 1000
+                365 days * 10000
             );
             uint256 bonus = Math.mulDiv(
                 stake.amount *
                     (APR + APR_Bonus * stake.nftCount) *
                     (block.timestamp - stake.nftDepositTime),
                 1,
-                365 days * 1000
+                365 days * 10000
             );
             reward = base + bonus;
         } else {
