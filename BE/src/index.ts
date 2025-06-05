@@ -6,7 +6,8 @@ import { APP_ORIGIN, PORT } from "./constants/env";
 import transRoutes from "./routes/trans.route";
 import { getTransactions } from "./crawl/crawlTransaction";
 import { setInterval } from "timers";
- 
+import authRoutes from "./routes/auth.route";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -18,12 +19,15 @@ app.use(
     })
 );
 
+app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
     res.send("Hello World! 123");
 });
 
 app.use("/api/transactions", transRoutes)
+app.use("/api/auth", authRoutes)
 
 setInterval(() => {
     getTransactions().then(() => {

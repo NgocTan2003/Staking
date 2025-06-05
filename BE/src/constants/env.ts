@@ -10,3 +10,5 @@ export const MONGO_URI = getEnv("MONGO_URI");
 export const APP_ORIGIN = getEnv("APP_ORIGIN");
 export const APP_DOMAIN = getEnv("APP_DOMAIN");
 export const PORT = getEnv("PORT");
+export const KEY_SIGNATURE = getEnv("KEY_SIGNATURE");
+export const NODE_ENV = getEnv("NODE_ENV");
