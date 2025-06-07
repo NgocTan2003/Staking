@@ -3,11 +3,13 @@ import { AccountDocument } from "../models/account.model";
 import AccountModel from "../models/account.model";
 import jwt from "jsonwebtoken";
 import { Request } from "express";
+import { verifyMessage } from "ethers";
 
 type LoginRequest = {
     address: string,
     signature: string,
-    userAgent?: string
+    message: string
+    userAgent?: string,
 }
 
 type AuthResponse = {
@@ -18,47 +20,81 @@ type AuthResponse = {
     errorCode?: number
 }
 
-const KEY_SIGNATURE = process.env.KEY_SIGNATURE;
 
-const getSignature = async (): Promise<string> => {
-    const Signature = process.env.Signature;
-    if (!Signature) {
-        throw new Error("Signature not found in environment variables");
+const getSignature = async (address: string): Promise<string> => {
+    if (!address) {
+        throw new Error("Address is required to get signature");
     }
+    if (address === process.env.ADDRESS_WALLET_ADMIN) {
+        if (!process.env.MESSAGE_ADMIN_SIGNATURE) {
+            throw new Error("MESSAGE_ADMIN_SIGNATURE is not defined in environment variables");
+        }
+        return process.env.MESSAGE_ADMIN_SIGNATURE;
+    } else {
+        if (!process.env.MESSAGE_USER_SIGNATURE) {
+            throw new Error("MESSAGE_USER_SIGNATURE is not defined in environment variables");
+        }
+        return process.env.MESSAGE_USER_SIGNATURE;
+    }
+}
 
-    return Signature;
+function verifySignature(address: string, message: string, signature: string) {
+    const recoveredAddress = verifyMessage(message, signature);
+    return recoveredAddress.toLowerCase() === address.toLowerCase();
 }
 
 const Login = async (req: LoginRequest): Promise<AuthResponse> => {
     try {
-        if (req.signature != KEY_SIGNATURE) {
+        if (req.message != process.env.MESSAGE_USER_SIGNATURE && req.message != process.env.MESSAGE_ADMIN_SIGNATURE) {
+            return {
+                message: "Invalid message",
+                errorCode: UNAUTHORIZED
+            };
+        }
+        const isValid = verifySignature(req.address, req.message, req.signature);
+
+        if (!isValid) {
             return {
                 message: "Invalid signature",
                 errorCode: UNAUTHORIZED
             };
         }
+
         let existingUser = await AccountModel.findOne({ Address: req.address });
         if (!existingUser) {
+            let isAdmin = false;
+            if (req.address === process.env.ADDRESS_WALLET_ADMIN) {
+                isAdmin = true;
+            }
             const account = await AccountModel.create({
                 Address: req.address,
                 Signature: req.signature,
+                isAdmin: isAdmin,
+                refreshToken: "",
             });
             existingUser = account;
+        } else {
+            existingUser.Signature = req.signature;
+            existingUser.refreshToken = "";
+            await existingUser.save();
         }
 
-        if (!KEY_SIGNATURE) {
-            throw new Error("KEY_SIGNATURE is not defined in environment variables");
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is not defined in environment variables");
         }
 
-        const accessToken = jwt.sign({ account: existingUser }, KEY_SIGNATURE, {
+        const accessToken = jwt.sign({ address: existingUser.Address, isAdmin: existingUser.isAdmin }, process.env.JWT_SECRET, {
             audience: ["account"],
             expiresIn: "30s",
         });
 
-        const refreshToken = jwt.sign({ account: existingUser }, KEY_SIGNATURE, {
+        const refreshToken = jwt.sign({ address: existingUser.Address, isAdmin: existingUser.isAdmin }, process.env.JWT_SECRET, {
             audience: ["account"],
             expiresIn: "1m",
         });
+
+        existingUser.refreshToken = refreshToken;
+        await existingUser.save();
 
         return {
             accessToken,
@@ -87,7 +123,6 @@ const RefreshToken = async (request: Request): Promise<AuthResponse> => {
     const now = Math.floor(Date.now() / 1000);
     try {
         const decodedAccessToken = jwt.decode(accessToken) as jwt.JwtPayload;
-        console.log("Decoded AccessToken refresh:", decodedAccessToken);
 
         if (decodedAccessToken?.exp && decodedAccessToken.exp > now) {
             return {
@@ -104,38 +139,40 @@ const RefreshToken = async (request: Request): Promise<AuthResponse> => {
             }
         }
 
-        if (!KEY_SIGNATURE) {
-            throw new Error("KEY_SIGNATURE is not defined in environment variables");
+        const JWT_SECRET = process.env.JWT_SECRET;
+        if (!JWT_SECRET) {
+            throw new Error("JWT_SECRET is not defined in environment variables");
         }
 
-        const verified = jwt.verify(refreshToken, KEY_SIGNATURE) as jwt.JwtPayload;
-        const accountData = verified.account;
+        const verified = jwt.verify(refreshToken, JWT_SECRET) as jwt.JwtPayload;
 
-        if (!accountData?.Address) {
+        if (!verified?.address) {
             return {
                 message: "Invalid token payload",
                 errorCode: UNAUTHORIZED
             }
         }
 
-        const account = await AccountModel.findOne({ Address: accountData.Address });
+        const account = await AccountModel.findOne({ Address: verified.address, refreshToken: refreshToken });
         if (!account) {
             return {
                 message: "Account not found",
                 errorCode: UNAUTHORIZED
             }
         }
-        
-        const newAccessToken = jwt.sign({ account: account }, KEY_SIGNATURE, {
+
+        const newAccessToken = jwt.sign({ address: account.Address, isAdmin: account.isAdmin }, JWT_SECRET, {
             audience: ["account"],
             expiresIn: "30s",
         });
 
-        const newRefreshToken = jwt.sign({ account: accessToken }, KEY_SIGNATURE, {
+        const newRefreshToken = jwt.sign({ address: account.Address, isAdmin: account.isAdmin }, JWT_SECRET, {
             audience: ["account"],
             expiresIn: "1m",
         });
-        console.log("New AccessToken:", newAccessToken);
+
+        account.refreshToken = newRefreshToken;
+        await account.save();
 
         return {
             accessToken: newAccessToken,

@@ -8,10 +8,11 @@ import { setAuthCookies } from "../utils/cookies";
 
 const getSignatureHandler = async (req: Request, res: Response): Promise<any> => {
     try {
-        const Signature = await getSignature();
+        const address = req.query.address as string;
+        const message_Signature = await getSignature(address);
         return res.status(200).json({
             statusCode: OK,
-            signature: Signature
+            message_signature: message_Signature
         });
     } catch (error) {
         console.error("Error getting signature:", error);
@@ -36,7 +37,7 @@ const loginHandler = async (req: Request, res: Response): Promise<any> => {
             return setAuthCookies({ res, accessToken, refreshToken })
                 .status(OK)
                 .json({ "accessToken": accessToken, "refreshToken": refreshToken, "message": message, "statusCode": OK });
-      
+
         } else if (errorCode) {
             return res.status(OK).json({
                 statusCode: errorCode,

@@ -5,6 +5,8 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 export interface AccountDocument extends mongoose.Document {
     Address: string;
     Signature: string;
+    isAdmin: boolean;
+    refreshToken: string;
 }
 
 const accountSchema = new mongoose.Schema<AccountDocument>({
@@ -16,6 +18,13 @@ const accountSchema = new mongoose.Schema<AccountDocument>({
         type: String,
         required: true,
     },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+    refreshToken: {
+        type: String,
+    }
 }, { timestamps: true });
 
 accountSchema.plugin(mongoosePaginate);
