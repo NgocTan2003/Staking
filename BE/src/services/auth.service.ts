@@ -85,12 +85,12 @@ const Login = async (req: LoginRequest): Promise<AuthResponse> => {
 
         const accessToken = jwt.sign({ address: existingUser.Address, isAdmin: existingUser.isAdmin }, process.env.JWT_SECRET, {
             audience: ["account"],
-            expiresIn: "30s",
+            expiresIn: "5m",
         });
 
         const refreshToken = jwt.sign({ address: existingUser.Address, isAdmin: existingUser.isAdmin }, process.env.JWT_SECRET, {
             audience: ["account"],
-            expiresIn: "1m",
+            expiresIn: "10m",
         });
 
         existingUser.refreshToken = refreshToken;
@@ -163,12 +163,12 @@ const RefreshToken = async (request: Request): Promise<AuthResponse> => {
 
         const newAccessToken = jwt.sign({ address: account.Address, isAdmin: account.isAdmin }, JWT_SECRET, {
             audience: ["account"],
-            expiresIn: "30s",
+            expiresIn: "5m",
         });
 
         const newRefreshToken = jwt.sign({ address: account.Address, isAdmin: account.isAdmin }, JWT_SECRET, {
             audience: ["account"],
-            expiresIn: "1m",
+            expiresIn: "10m",
         });
 
         account.refreshToken = newRefreshToken;
