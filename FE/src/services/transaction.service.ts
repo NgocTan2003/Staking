@@ -8,7 +8,7 @@ const getAllTransactionPaginated = async (page = 1, limit = 10, sort = 'Timestam
             _sort: sort,
             _order: order
         },
-        withCredentials: true
+        withCredentials: true,
     });
 
     return response;
@@ -39,6 +39,8 @@ const searchTransaction = async (address = "", page = 1, limit = 10, sort = 'Tim
     });
     return response;
 }
-
+// neeus laf solana => call be lay nonce => sign message => verify signature
+// metaMask => "anh yeu em" => sign => verify signature
+// sign = > bE verifySign 
 
 export { getAllTransactionPaginated, getUserTransactionPaginated, searchTransaction };

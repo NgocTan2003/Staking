@@ -4,10 +4,20 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from 'wagmi'
 import { toast } from 'react-toastify';
 import { useStakingContext } from "../contexts/StakingContext";
+import { useSignMessage } from 'wagmi';
+import { useGetSignature, useLogin } from "../utils/hook/useAuth";
+import { useDisconnect } from 'wagmi';
+import type { LoginType } from "../types/login.type";
 
 const Header = () => {
-    const { isConnected } = useAccount();
+    const { isConnected, address } = useAccount();
     const { baseAPR, userBalance, userNFTCount, updateBalancesTokenA } = useStakingContext();
+    const { signMessageAsync } = useSignMessage();
+    const [hasSigned, setHasSigned] = useState(false);
+    const { data, refetch: refetchSignature } = useGetSignature(address as `0x${string}`);
+    const { mutateAsync: login, isPending, error } = useLogin();
+    const { disconnect } = useDisconnect();
+
 
     useEffect(() => {
         const wasConnected = localStorage.getItem('wasConnected') === 'true';
@@ -19,6 +29,59 @@ const Header = () => {
 
         localStorage.setItem('wasConnected', isConnected.toString());
     }, [isConnected]);
+
+    useEffect(() => {
+        const shouldDisconnect = localStorage.getItem("requireWalletReconnect") === "true";
+
+        if (shouldDisconnect) {
+            setTimeout(() => {
+                disconnect();
+                localStorage.removeItem("requireWalletReconnect");
+            }, 500);
+        }
+    }, []);
+
+    useEffect(() => {
+        const sign = async () => {
+            try {
+                if (!address || hasSigned) return;
+
+                const response = await refetchSignature();
+                const messageToSign = response.data?.message_signature;
+
+                if (!messageToSign) {
+                    toast.error("Get message signature failed");
+                    return;
+                }
+
+                const signature = await signMessageAsync({ account: address, message: messageToSign });
+                if (!signature) {
+                    toast.error("Signature failed");
+                    return;
+                }
+
+                const loginType: LoginType = {
+                    address: address as `0x${string}`,
+                    signature,
+                    message: messageToSign,
+                };
+
+                const result = await login({ loginType });
+                if (result.statusCode !== 200) {
+                    toast.error("Login failed: " + result.message);
+                    return;
+                }
+
+                setHasSigned(true);
+            } catch (error) {
+                console.error("Error Signature", error);
+            }
+        };
+
+        if (isConnected && address) {
+            sign();
+        }
+    }, [isConnected, address, signMessageAsync, hasSigned]);
 
     return (
         <div className="flex justify-between items-center p-8 bg-gray-400 text-lg">
