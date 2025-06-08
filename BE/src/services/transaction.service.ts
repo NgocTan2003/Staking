@@ -80,7 +80,6 @@ const getAllTransactions = async (req: Request): Promise<TransactionPaginateResp
 const getUserTransactions = async (req: Request): Promise<TransactionPaginateResponse> => {
     try {
         const { address } = req.params;
-        console.log("Address getUserTransactions:", address);
         const {
             _page = 1,
             _limit = 10,

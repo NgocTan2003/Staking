@@ -3,7 +3,7 @@ import { UNAUTHORIZED, FORBIDDEN } from "../constants/http"
 import { RefreshToken } from "../services/auth.service";
 import { TokenExpiredError } from "jsonwebtoken";
 const jwt = require('jsonwebtoken');
-import { setAuthCookies } from "../utils/cookies";
+import { setAuthCookies, clearAuthCookies } from "../utils/cookies";
 
 const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     const accessToken = req.cookies?.accessToken;
@@ -32,6 +32,7 @@ const authenticateToken = async (req: Request, res: Response, next: NextFunction
                 return next();
             }
 
+            clearAuthCookies(res);
             return res.status(result.errorCode || UNAUTHORIZED).json({ message: result.message, errorCode: result.errorCode });
         }
 
